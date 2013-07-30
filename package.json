@@ -7,5 +7,10 @@
         "type": "git",
         "url": "https://github.com/yeaha/any-orm.git"
     },
+    "dependencies": {
+        "generic-pool": "2.0.4",
+        "q": "0.9.6",
+        "underscore": "1.5.1",
+    },
     "license": "MIT"
 }

@@ -1,0 +1,11 @@
+{
+    "name": "any-orm",
+    "author": "yangyi.cn.gz@gmail.com",
+    "description": "Object Relational Mapper for node.js",
+    "main": "./lib",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yeaha/any-orm.git"
+    },
+    "license": "MIT"
+}

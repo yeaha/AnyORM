@@ -6,7 +6,7 @@ var DBMapper = anyorm.DBMapper;
 
 // 定义数据库服务
 Service.register({
-    db: {
+    __db__: {
         constructor: function(config) {
             var Adapter = Service.DB.Adapter;
             return new Adapter(config['dsn'], config['pool']);

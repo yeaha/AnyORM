@@ -10,7 +10,7 @@ exports.testDefineData = function(test) {
 
     var User = anyorm.defineData({
         mapper: anyorm.Mapper,
-        columns: {
+        properties: {
             user_id: {type: 'integer', primary_key: true, auto_increase: true},
             email: {type: 'string', refuse_update: true},
             passwd: {type: 'string', strict: true},

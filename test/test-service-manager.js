@@ -11,14 +11,14 @@ Adapter.prototype.getName = function() {
 ////////////////////////////////////////////////////////////////////////////////
 
 exports.testRegister = function(test) {
-    Service.register('foo', {
+    Service.define('foo', {
         constructor: function(options) {
             return new Adapter(options);
         },
         name: 'foo'
     });
 
-    Service.register({
+    Service.define({
         bar: {
             __EXTEND__: 'foo',
             name: 'bar'
@@ -32,7 +32,7 @@ exports.testRegister = function(test) {
 };
 
 exports.testDispatch = function(test) {
-    Service.register('foobar', function(id) {
+    Service.define('foobar', function(id) {
         return (id % 2) ? 'foo' : 'bar';
     });
 

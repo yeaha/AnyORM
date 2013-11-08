@@ -5,7 +5,7 @@ var Service = anyorm.Service;
 var DBMapper = anyorm.DBMapper;
 
 // 定义数据库服务
-Service.register({
+Service.define({
     __db__: {
         constructor: function(config) {
             var Adapter = Service.DB.Adapter;

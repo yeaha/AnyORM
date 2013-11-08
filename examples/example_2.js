@@ -5,7 +5,7 @@ var anyorm = require('../lib');
 var Service = anyorm.Service;
 
 // 定义数据库服务
-Service.register({
+Service.define({
     redis: {
         constructor: function(config) {
             return Service.Redis.createPool(config['client'], config['pool']);

@@ -3,7 +3,7 @@ var anyorm = require('../lib');
 var Service = anyorm.Service;
 
 // 定义数据库服务
-Service.register('example', {
+Service.define('example', {
     constructor: function(config) {
         var Adapter = Service.DB.Adapter;
         return new Adapter(config['dsn'], config['options']);

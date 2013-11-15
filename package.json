@@ -5,7 +5,7 @@
     "main": "./lib",
     "repository": {
         "type": "git",
-        "url": "https://github.com/yeaha/any-orm.git"
+        "url": "https://github.com/yeaha/AnyORM.git"
     },
     "keywords": [
         "DataMapper",

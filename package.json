@@ -1,5 +1,5 @@
 {
-    "name": "any-orm",
+    "name": "AnyORM",
     "author": "yangyi.cn.gz@gmail.com",
     "description": "Object Relational Mapper for node.js",
     "main": "./lib",

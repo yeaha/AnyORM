@@ -273,5 +273,29 @@ describe('Data', function() {
                 assert.strictEqual(id.sn, 'db64e6c4-ee56-4225-9b3d-2c431cc8f59e');
             });
         });
+
+        it('should return clone value when object type attribute config "clone" is true', function() {
+            var NewData = Data.define({
+                mapper: Mapper.Mapper,
+                attributes: {
+                    id: {type: 'integer', primary_key: true},
+                    foo: {type: 'datetime', default: 'now'},
+                    bar: {type: 'datetime', default: 'now', clone: false},
+                    x: {type: 'json'},
+                    y: {type: 'json', clone: false},
+                }
+            });
+
+            var data = new NewData({
+                x: [1, 2, 3],
+                y: {a: 1, b: 2, c: 3}
+            });
+
+            assert.notStrictEqual(data.foo, data.foo);
+            assert.strictEqual(data.bar, data.bar);
+
+            assert.notStrictEqual(data.x, data.x);
+            assert.strictEqual(data.y, data.y);
+        });
     });
 });

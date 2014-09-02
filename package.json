@@ -23,5 +23,8 @@
     },
     "devDependencies": {
         "mocha": "1.21.4"
+    },
+    "scripts": {
+        "test": "mocha ./test"
     }
 }

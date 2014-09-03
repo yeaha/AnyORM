@@ -253,8 +253,8 @@ describe('Data', function() {
                 var NewData = Data.define({
                     mapper: Mapper.Mapper,
                     attributes: {
-                        id: {type: 'integer', primary_key: true, auto_increase: true},
-                        sn: {type: 'uuid', primary_key: true}
+                        foo_id: {type: 'integer', primary_key: true, auto_increase: true},
+                        bar_id: {type: 'integer', primary_key: true}
                     }
                 });
 
@@ -262,15 +262,15 @@ describe('Data', function() {
                 var id = data.getId();
 
                 assert.equal(typeof id, 'object');
-                assert.strictEqual(id.id, null);
-                assert.strictEqual(id.sn, null);
+                assert.strictEqual(id.foo_id, null);
+                assert.strictEqual(id.bar_id, null);
 
-                data.id = 1;
-                data.sn = 'db64e6c4-ee56-4225-9b3d-2c431cc8f59e';
+                data.foo_id = 1;
+                data.bar_id = 2;
 
                 id = data.getId();
-                assert.strictEqual(id.id, 1);
-                assert.strictEqual(id.sn, 'db64e6c4-ee56-4225-9b3d-2c431cc8f59e');
+                assert.strictEqual(id.foo_id, 1);
+                assert.strictEqual(id.bar_id, 2);
             });
         });
 

@@ -1,19 +1,19 @@
 var assert = require("assert");
 var Type = require(__dirname+'/../lib/type');
 
-describe('Mixed type', function() {
-    var Mixed = Type.get();
+describe('Default type', function() {
+    var Default = Type.get();
 
     it('should return null when the value is empty string', function() {
-        assert.strictEqual(Mixed.normalize(''), null);
+        assert.strictEqual(Default.normalize(''), null);
     });
 
     describe('Value normalize', function() {
         it('should return passed value back', function() {
-            assert.strictEqual(Mixed.normalize(null), null);
-            assert.strictEqual(Mixed.normalize(undefined), undefined);
-            assert.strictEqual(Mixed.normalize('0'), '0');
-            assert.strictEqual(Mixed.normalize(0), 0);
+            assert.strictEqual(Default.normalize(null), null);
+            assert.strictEqual(Default.normalize(undefined), undefined);
+            assert.strictEqual(Default.normalize('0'), '0');
+            assert.strictEqual(Default.normalize(0), 0);
         });
     });
 });

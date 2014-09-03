@@ -195,3 +195,32 @@ describe('Json type', function() {
         });
     });
 });
+
+describe('UUID type', function() {
+    var uuid = Type.get('uuid');
+    var re = /^[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[0-9a-f]{4}\-[0-9a-f]{12}$/;
+
+    describe('Default value', function() {
+        it('should return uuid when config "primary_key" is true', function() {
+            var config = uuid.normalizeConfig({primary_key: true});
+            var id = uuid.getDefaultValue(config);
+
+            assert(re.test(id));
+        });
+
+        it('should return uuid when config "auto_generate" is true', function() {
+            var config = uuid.normalizeConfig({auto_generate: true});
+            var id = uuid.getDefaultValue(config);
+
+            assert(re.test(id));
+        });
+
+        it('should return upper case uuid when config "upper" is true', function() {
+            var config = uuid.normalizeConfig({auto_generate: true, upper: true});
+            var id = uuid.getDefaultValue(config);
+            var re = /^[0-9A-F]{8}\-[0-9A-F]{4}\-4[0-9A-F]{3}\-[0-9A-F]{4}\-[0-9A-F]{12}$/;
+
+            assert(re.test(id));
+        });
+    });
+});

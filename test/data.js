@@ -137,7 +137,7 @@ describe('Data', function() {
             });
 
             assert.throws(function() {
-                data.set('bar', 'test');
+                data.bar = 'test';
             }, /refuse/i);
 
             // not throw error when strict mode is off
@@ -150,20 +150,20 @@ describe('Data', function() {
             // refuse_update not work on fresh instance
             assert.doesNotThrow(function() {
                 var data = new NewData;
-                data.set('bar', 'bar');
+                data.bar = 'bar';
             });
         });
 
         it('should throw error when property is "primary_key"', function() {
             assert.throws(function() {
                 var data = SimpleData.getMapper().pack({id: 1});
-                data.set('id', 2);
+                data.id = 2;
             }, /refuse/);
 
             // fresh instance can set primary key
             assert.doesNotThrow(function() {
                 var data = new SimpleData;
-                data.set('id', 1);
+                data.id = 1;
             });
         });
 
@@ -179,11 +179,11 @@ describe('Data', function() {
             var data = new NewData;
 
             assert.throws(function() {
-                data.set('bar', null);
+                data.bar = null;
             });
 
             assert.doesNotThrow(function() {
-                data.set('foo', null);
+                data.foo = null;
             });
         });
 
@@ -206,16 +206,16 @@ describe('Data', function() {
 
             assert(data.isDirty() === false);
 
-            data.set('foo', 'foo');
+            data.foo = 'foo';
             assert(data.isDirty() === false);
 
-            data.set('bar', null);
+            data.bar = null;
             assert(data.isDirty() === false);
 
-            data.set('baz', 0);
+            data.baz = 0;
             assert(data.isDirty() === false);
 
-            data.set('foo', 'bar');
+            data.foo = 'bar';
             assert(data.isDirty() === true);
         });
 
@@ -231,10 +231,10 @@ describe('Data', function() {
             var data = NewData.getMapper().pack({id: 1});
             assert(data.isDirty() === false);
 
-            data.set('foo', 'foo');
+            data.foo = 'foo';
             assert(data.isDirty() === false);
 
-            data.set('foo', 'bar');
+            data.foo = 'bar';
             assert(data.isDirty() === true);
         });
     });
@@ -245,7 +245,7 @@ describe('Data', function() {
                 var data = new SimpleData;
                 assert.strictEqual(data.getId(), null);
 
-                data.set('id', 1);
+                data.id = 1;
                 assert.strictEqual(data.getId(), 1);
             });
 
@@ -265,8 +265,8 @@ describe('Data', function() {
                 assert.strictEqual(id.foo_id, null);
                 assert.strictEqual(id.bar_id, null);
 
-                data.set('foo_id', 1);
-                data.set('bar_id', 2);
+                data.foo_id = 1;
+                data.bar_id = 2;
 
                 id = data.getId();
                 assert.strictEqual(id.foo_id, 1);
@@ -291,11 +291,11 @@ describe('Data', function() {
                 y: {a: 1, b: 2, c: 3}
             });
 
-            assert.notStrictEqual(data.get('foo'), data.get('foo'));
-            assert.strictEqual(data.get('bar'), data.get('bar'));
+            assert.notStrictEqual(data.foo, data.foo);
+            assert.strictEqual(data.bar, data.bar);
 
-            assert.notStrictEqual(data.get('x'), data.get('x'));
-            assert.strictEqual(data.get('y'), data.get('y'));
+            assert.notStrictEqual(data.x, data.x);
+            assert.strictEqual(data.y, data.y);
         });
     });
 });

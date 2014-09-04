@@ -37,7 +37,17 @@ describe('Service manager', function() {
         }, /generator/);
     });
 
-    it('should throw error when service dispatcher not return service name', function() {
+    it('should throw error when service generator return noting', function() {
+        assert.throws(function() {
+            manager.define('baz', {
+                generator: function() {},
+                name: 'baz'
+            });
+            manager.get('baz');
+        }, /generator/);
+    });
+
+    it('should throw error when service dispatcher return nothing', function() {
         assert.throws(function() {
             manager.define('baz', function(id) {});
             manager.get('baz', 1);

@@ -166,4 +166,43 @@ describe('DB Select', function() {
         select.reset().offset(0);
         assert.equal(select.compile().text, 'SELECT * FROM `foobar`');
     });
+
+    it('_compileFrom()', function() {
+        var other_select = new DB.Select(adapter, select);
+        var query = other_select.compile();
+        assert.equal(query.text.replace(/`t_\d+`/, '`t_d`'), 'SELECT * FROM (SELECT * FROM `foobar`) AS `t_d`');
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        other_select.where('foo = ?', 'foo');
+        select.reset().where('bar = ?', 'bar');
+
+        query = other_select.compile();
+        assert.equal(query.text.replace(/`t_\d+`/, '`t_d`'), 'SELECT * FROM (SELECT * FROM `foobar` WHERE (bar = ?)) AS `t_d` WHERE (foo = ?)');
+        assert.equal(query.values[0], 'bar');
+        assert.equal(query.values[1], 'foo');
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        other_select = new DB.Select(adapter, new DB.Expr('(select * from `baz`) as `tmp`'));
+        assert.equal(other_select.compile().text, 'SELECT * FROM (select * from `baz`) as `tmp`');
+    });
+
+    it('compile()', function() {
+        select.reset();
+
+        select.setColumns('foo', 'bar', new DB.Expr('count(1) AS count'))
+              .where('id > ?', 100)
+              .where('foo = ? or bar = ?', 'foo', 'bar')
+              .group(['foo', 'bar'], 'count(1) > ?', 1)
+              .order('foo', {column: 'bar', sort: 'desc'})
+              .limit(10)
+              .offset(10);
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT `foo`, `bar`, count(1) AS count FROM `foobar` WHERE (id > ?) AND (foo = ? or bar = ?) GROUP BY `foo`, `bar` HAVING count(1) > ? ORDER BY `foo`, `bar` DESC LIMIT 10 OFFSET 10');
+        assert.equal(query.values[0], 100);
+        assert.equal(query.values[1], 'foo');
+        assert.equal(query.values[2], 'bar');
+        assert.equal(query.values[3], 1);
+    });
 });

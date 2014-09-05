@@ -106,19 +106,6 @@ describe('Data', function() {
     });
 
     describe('Set property', function() {
-        it('should throw error when property is undefined', function() {
-            var data = new SimpleData;
-
-            assert.throws(function() {
-                data.set('foo', 1);
-            }, /undefined property/i);
-
-            // not throw error when strict mode is off
-            assert.doesNotThrow(function() {
-                data.set({foo: 1});
-            });
-        });
-
         it('should throw error when property is refuse_update', function() {
             var NewData = Data.define({
                 mapper: Mapper.Mapper,
@@ -142,7 +129,7 @@ describe('Data', function() {
 
             // not throw error when strict mode is off
             assert.doesNotThrow(function() {
-                data.set({bar: 'test'});
+                data.merge({bar: 'test'});
             });
 
             assert(data.isDirty() === false);

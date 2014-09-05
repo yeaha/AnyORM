@@ -1,0 +1,169 @@
+'use strict';
+
+var assert = require('assert');
+var DB = require(__dirname+'/../../lib/service/db');
+
+var MockAdapter = function() {};
+
+MockAdapter.prototype.quoteIdentifier = function(identifier) {
+    if (identifier instanceof DB.Expr) {
+        return identifier.toString();
+    }
+
+    return '`'+identifier+'`';
+};
+
+describe('DB Select', function() {
+    var adapter = new MockAdapter;
+    var select = new DB.Select(adapter, 'foobar');
+
+    it('setColumns()', function() {
+        select.reset();
+
+        assert.equal(select.compile().text, 'SELECT * FROM `foobar`');
+
+        select.setColumns('foo');
+        assert.equal(select.compile().text, 'SELECT `foo` FROM `foobar`');
+
+        select.setColumns('foo', 'bar');
+        assert.equal(select.compile().text, 'SELECT `foo`, `bar` FROM `foobar`');
+
+        select.setColumns(['bar', 'foo']);
+        assert.equal(select.compile().text, 'SELECT `bar`, `foo` FROM `foobar`');
+
+        select.setColumns('foo', new DB.Expr('bar as b'));
+        assert.equal(select.compile().text, 'SELECT `foo`, bar as b FROM `foobar`');
+
+        select.setColumns('*');
+        assert.equal(select.compile().text, 'SELECT * FROM `foobar`');
+    });
+
+    it('where()', function() {
+        select.reset().where('foo = ?', 'foo');
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` WHERE (foo = ?)');
+        assert.equal(query.values[0], 'foo');
+
+        select.reset().where('foo = ?', 'foo').where('bar = ?', 'bar');
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` WHERE (foo = ?) AND (bar = ?)');
+        assert.equal(query.values[0], 'foo');
+        assert.equal(query.values[1], 'bar');
+
+        select.reset().where('foo = ? OR bar = ?', 'foo', 'bar').where('baz = ?', 'baz');
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` WHERE (foo = ? OR bar = ?) AND (baz = ?)');
+        assert.equal(query.values[0], 'foo');
+        assert.equal(query.values[1], 'bar');
+        assert.equal(query.values[2], 'baz');
+    });
+
+    it('whereIn() / whereNotIn()', function() {
+        select.reset().whereIn('id', [1, 2, 3]);
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` WHERE (`id` IN (?, ?, ?))');
+        assert.equal(query.values[0], 1);
+        assert.equal(query.values[1], 2);
+        assert.equal(query.values[2], 3);
+
+        select.reset().whereNotIn('foo', ['a', 'b', 'c']);
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` WHERE (`foo` IN (?, ?, ?))');
+        assert.equal(query.values[0], 'a');
+        assert.equal(query.values[1], 'b');
+        assert.equal(query.values[2], 'c');
+
+        var select_bar = (new DB.Select(adapter, 'bar')).setColumns('foo_id').whereIn('bar_id', [1, 2, 3]);
+        select.reset().whereIn('id', select_bar);
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` WHERE (`id` IN (SELECT `foo_id` FROM `bar` WHERE (`bar_id` IN (?, ?, ?))))');
+        assert.equal(query.values[0], 1);
+        assert.equal(query.values[1], 2);
+        assert.equal(query.values[2], 3);
+
+        assert.throws(function() {
+            select.reset().whereIn('id', null);
+        }, /invalid/i);
+    });
+
+    it('group()', function() {
+        select.reset().group('foo');
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` GROUP BY `foo`');
+        assert.strictEqual(query.values.length, 0);
+
+        select.reset().group(['foo', 'bar']);
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` GROUP BY `foo`, `bar`');
+
+        select.reset().group(['foo', 'bar'], 'count(foo) > ?', 2);
+
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` GROUP BY `foo`, `bar` HAVING count(foo) > ?');
+        assert.equal(query.values[0], 2);
+    });
+
+    it('order()', function() {
+        select.reset().order('foo');
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `foo`');
+
+        select.reset().order('foo desc');
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `foo desc`');
+
+        select.reset().order({column: 'bar', sort: 'desc'});
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `bar` DESC');
+
+        select.reset().order({column: 'bar', sort: 'fdjslfdjslfjsdlfjldsf'});
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `bar`');
+
+        select.reset().order('foo', {column: 'bar', sort: 'desc'});
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `foo`, `bar` DESC');
+
+        select.reset().order('foo', {column: 'bar', sort: 'desc'}, new DB.Expr('baz asc'));
+        var query = select.compile();
+        assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `foo`, `bar` DESC, baz asc');
+
+        assert.throws(function() {
+            select.reset().order({sort: 'desc'});
+        });
+
+        assert.throws(function() {
+            select.reset().order(null);
+        });
+    });
+
+    it('limit()', function() {
+        select.reset().limit(1);
+        assert.equal(select.compile().text, 'SELECT * FROM `foobar` LIMIT 1');
+
+        select.reset().limit(-1);
+        assert.equal(select.compile().text, 'SELECT * FROM `foobar` LIMIT 1');
+
+        select.reset().limit(0);
+        assert.equal(select.compile().text, 'SELECT * FROM `foobar`');
+    });
+
+    it('offset()', function() {
+        select.reset().offset(1);
+        assert.equal(select.compile().text, 'SELECT * FROM `foobar` OFFSET 1');
+
+        select.reset().offset(-1);
+        assert.equal(select.compile().text, 'SELECT * FROM `foobar` OFFSET 1');
+
+        select.reset().offset(0);
+        assert.equal(select.compile().text, 'SELECT * FROM `foobar`');
+    });
+});

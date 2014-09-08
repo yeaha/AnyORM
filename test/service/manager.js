@@ -10,7 +10,7 @@ describe('Service manager', function() {
 
     manager.define({
         foo: {
-            generator: function(config) {
+            factory: function(config) {
                 return new TestService(config);
             },
             name: 'foo',
@@ -30,21 +30,21 @@ describe('Service manager', function() {
         }, /undefined/i);
     });
 
-    it('should throw error when service generator is undefined', function() {
+    it('should throw error when service factory is undefined', function() {
         assert.throws(function() {
             manager.define('baz', {name: 'baz'});
             manager.get('baz');
-        }, /generator/);
+        }, /factory/);
     });
 
-    it('should throw error when service generator return noting', function() {
+    it('should throw error when service factory return noting', function() {
         assert.throws(function() {
             manager.define('baz', {
-                generator: function() {},
+                factory: function() {},
                 name: 'baz'
             });
             manager.get('baz');
-        }, /generator/);
+        }, /factory/);
     });
 
     it('should throw error when service dispatcher return nothing', function() {

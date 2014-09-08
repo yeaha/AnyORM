@@ -8,14 +8,14 @@ var assert = require('assert');
 describe('Redis', function() {
     Service.define({
         'redis': {
-            generator: function(options) {
+            factory: function(options) {
                 return Service.Redis.createClient(options);
             },
             host: '127.0.0.1',
             port: 6379,
         },
         'redis_pool': {
-            generator: function(options) {
+            factory: function(options) {
                 return Service.Redis.createPool(options.pool, options.client);
             },
             pool: {

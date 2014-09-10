@@ -174,6 +174,26 @@ describe('Data', function() {
             });
         });
 
+        it('should throws error when attribute normailze function return nothing', function() {
+            var NewData = Data.define({
+                mapper: Mapper.Mapper,
+                attributes: {
+                    id: {type: 'integer', primary_key: true},
+                    passwd: {
+                        type: String,
+                        normalize: function(value) {
+                        }
+                    }
+                }
+            });
+
+            var data = new NewData;
+
+            assert.throws(function() {
+                data.passwd = 'abc';
+            });
+        });
+
         it('should unchange when the value is strict equal current value', function() {
             var NewData = Data.define({
                 mapper: Mapper.Mapper,
@@ -223,6 +243,25 @@ describe('Data', function() {
 
             data.foo = 'bar';
             assert(data.isDirty() === true);
+        });
+
+        it('should set normalized value by attribute normalize function', function() {
+            var NewData = Data.define({
+                mapper: Mapper.Mapper,
+                attributes: {
+                    id: {type: 'integer', primary_key: true},
+                    passwd: {
+                        type: String,
+                        normalize: function(value) {
+                            return value + 'abc';
+                        }
+                    }
+                }
+            });
+
+            var data = new NewData;
+            data.passwd = 'passwd';
+            assert.equal(data.passwd, 'passwdabc');
         });
     });
 

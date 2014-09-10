@@ -263,6 +263,30 @@ describe('Data', function() {
             data.passwd = 'passwd';
             assert.equal(data.passwd, 'passwdabc');
         });
+
+        it('should ignore merge when attribute "strict" is true', function() {
+            var NewData = Data.define({
+                mapper: Mapper.Mapper,
+                attributes: {
+                    id: {type: 'integer', primary_key: true},
+                    foo: {type: String, strict: true},
+                    bar: {type: String},
+                }
+            });
+
+            var data = new NewData;
+
+            data.merge({
+                foo: 'foo',
+                bar: 'bar'
+            });
+
+            assert.strictEqual(data.foo, null);
+            assert.strictEqual(data.bar, 'bar');
+
+            data.foo = 'foo';
+            assert.strictEqual(data.foo, 'foo');
+        });
     });
 
     describe('Get property', function() {

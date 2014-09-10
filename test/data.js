@@ -43,7 +43,7 @@ describe('Data', function() {
                 collection: 'foo',
                 attributes: {
                     id: {type: 'integer', primary_key: true},
-                    foo: {type: String}
+                    foo: String
                 }
             });
 
@@ -55,7 +55,7 @@ describe('Data', function() {
             var BarData = Data.define({
                 collection: 'bar',
                 attributes: {
-                    bar: {type: String}
+                    bar: String
                 }
             }, FooData);
 
@@ -78,7 +78,7 @@ describe('Data', function() {
                 mapper: Mapper.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
-                    foo: {type: String}
+                    foo: String
                 }
             });
 
@@ -111,7 +111,7 @@ describe('Data', function() {
                 mapper: Mapper.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
-                    foo: {type: String},
+                    foo: String,
                     bar: {type: String, refuse_update: true}
                 }
             });
@@ -199,9 +199,9 @@ describe('Data', function() {
                 mapper: Mapper.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
-                    foo: {type: String},
+                    foo: String,
                     bar: {type: String, allow_null: true},
-                    baz: {type: 'integer'}
+                    baz: 'integer'
                 }
             });
 
@@ -270,7 +270,7 @@ describe('Data', function() {
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     foo: {type: String, strict: true},
-                    bar: {type: String},
+                    bar: String,
                 }
             });
 
@@ -331,7 +331,7 @@ describe('Data', function() {
                     id: {type: 'integer', primary_key: true},
                     foo: {type: 'datetime', default: 'now'},
                     bar: {type: 'datetime', default: 'now', clone: false},
-                    x: {type: 'json'},
+                    x: 'json',
                     y: {type: 'json', clone: false},
                 }
             });

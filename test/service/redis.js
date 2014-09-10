@@ -1,7 +1,7 @@
 "use strict";
 
 var Promise = require('bluebird');
-var anyorm = require(__dirname+'/../../lib');
+var anyorm = require(__dirname+'/../../');
 var Service = anyorm.Service;
 var assert = require('assert');
 

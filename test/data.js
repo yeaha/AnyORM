@@ -1,12 +1,11 @@
 "use strict";
 
 var assert = require("assert");
-var Data = require(__dirname+'/../lib/data.js');
-var Mapper = require(__dirname+'/../lib/mapper.js');
+var anyorm = require('../');
 
 describe('Data', function() {
-    var SimpleData = Data.define({
-        mapper: Mapper.Mapper,
+    var SimpleData = anyorm.defineData({
+        mapper: anyorm.Mapper,
         attributes: {
             id: {type: 'integer', primary_key: true, auto_increase: true},
         }
@@ -15,20 +14,20 @@ describe('Data', function() {
     describe('Define', function() {
         it('should throw error when options without "mapper"', function() {
             assert.throws(function() {
-                Data.define({});
+                anyorm.defineData({});
             });
         });
 
         it('should throw error when primary_key is undefined', function() {
             assert.throws(function() {
-                Data.define({
-                    mapper: Mapper.Mapper
+                anyorm.defineData({
+                    mapper: anyorm.Mapper
                 });
             });
 
             assert.doesNotThrow(function() {
-                Data.define({
-                    mapper: Mapper.Mapper,
+                anyorm.defineData({
+                    mapper: anyorm.Mapper,
                     attributes: {
                         id: {type: 'integer', primary_key: true}
                     }
@@ -37,8 +36,8 @@ describe('Data', function() {
         });
 
         it('should inherit parent Data options', function() {
-            var FooMapper = Mapper.define({});
-            var FooData = Data.define({
+            var FooMapper = anyorm.defineMapper({});
+            var FooData = anyorm.defineData({
                 mapper: FooMapper,
                 collection: 'foo',
                 attributes: {
@@ -52,7 +51,7 @@ describe('Data', function() {
             assert(foo.has('bar') === false);
             assert.equal(foo.getMapper().getCollection(), 'foo');
 
-            var BarData = Data.define({
+            var BarData = anyorm.defineData({
                 collection: 'bar',
                 attributes: {
                     bar: String
@@ -74,8 +73,8 @@ describe('Data', function() {
         });
 
         it('should be dirty when initialize with values', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     foo: String
@@ -87,8 +86,8 @@ describe('Data', function() {
         });
 
         it('should set default value after initialize', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     a: {type: 'integer', default: 0},
@@ -107,8 +106,8 @@ describe('Data', function() {
 
     describe('Set property', function() {
         it('should throw error when property is refuse_update', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     foo: String,
@@ -155,8 +154,8 @@ describe('Data', function() {
         });
 
         it('should throw error when set null to not "allow_null" property', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     foo: {type: String, allow_null: true},
@@ -175,8 +174,8 @@ describe('Data', function() {
         });
 
         it('should throws error when attribute normailze function return nothing', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     passwd: {
@@ -195,8 +194,8 @@ describe('Data', function() {
         });
 
         it('should unchange when the value is strict equal current value', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     foo: String,
@@ -227,8 +226,8 @@ describe('Data', function() {
         });
 
         it('should unchange when the value is strict equal default value', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     foo: {type: String, default: 'foo'},
@@ -246,8 +245,8 @@ describe('Data', function() {
         });
 
         it('should set normalized value by attribute normalize function', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     passwd: {
@@ -265,8 +264,8 @@ describe('Data', function() {
         });
 
         it('should ignore merge when attribute "strict" is true', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     foo: {type: String, strict: true},
@@ -300,8 +299,8 @@ describe('Data', function() {
             });
 
             it('should return as object when multiple "primary_key"', function() {
-                var NewData = Data.define({
-                    mapper: Mapper.Mapper,
+                var NewData = anyorm.defineData({
+                    mapper: anyorm.Mapper,
                     attributes: {
                         foo_id: {type: 'integer', primary_key: true, auto_increase: true},
                         bar_id: {type: 'integer', primary_key: true}
@@ -325,8 +324,8 @@ describe('Data', function() {
         });
 
         it('should return clone value when object type attribute config "clone" is true', function() {
-            var NewData = Data.define({
-                mapper: Mapper.Mapper,
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     foo: {type: 'datetime', default: 'now'},

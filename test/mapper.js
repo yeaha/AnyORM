@@ -1,13 +1,12 @@
 "use strict";
 
 var assert = require("assert");
-var Data = require(__dirname+'/../lib/data.js');
-var Mapper = require(__dirname+'/../lib/mapper.js');
+var anyorm = require("../");
 
 describe('Mapper', function() {
-    var SimpleMapper = Mapper.define({});
+    var SimpleMapper = anyorm.defineMapper({});
 
-    var SimpleData = Data.define({
+    var SimpleData = anyorm.defineData({
         mapper: SimpleMapper,
         attributes: {
             id: {type: 'integer', primary_key: true, auto_increase: true}

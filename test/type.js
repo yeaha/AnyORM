@@ -1,5 +1,6 @@
 var assert = require("assert");
-var Type = require(__dirname+'/../lib/type');
+var anyorm = require("../");
+var Type = anyorm.Type;
 
 describe('Default type', function() {
     var Default = Type.get();

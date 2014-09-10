@@ -1,14 +1,15 @@
 "use strict";
 
-var manager = require(__dirname+'/../../lib/service/manager');
 var assert = require('assert');
+var anyorm = require('../../');
+var Service = anyorm.Service;
 
 describe('Service manager', function() {
     var TestService = function(config) {
         this.config = config;
     }
 
-    manager.define({
+    Service.define({
         foo: {
             factory: function(config) {
                 return new TestService(config);
@@ -26,52 +27,52 @@ describe('Service manager', function() {
 
     it('should throw error when get undefined service', function() {
         assert.throws(function() {
-            manager.get('baz');
+            Service.get('baz');
         }, /undefined/i);
     });
 
     it('should throw error when service factory is undefined', function() {
         assert.throws(function() {
-            manager.define('baz', {name: 'baz'});
-            manager.get('baz');
+            Service.define('baz', {name: 'baz'});
+            Service.get('baz');
         }, /factory/);
     });
 
     it('should throw error when service factory return noting', function() {
         assert.throws(function() {
-            manager.define('baz', {
+            Service.define('baz', {
                 factory: function() {},
                 name: 'baz'
             });
-            manager.get('baz');
+            Service.get('baz');
         }, /factory/);
     });
 
     it('should throw error when service dispatcher return nothing', function() {
         assert.throws(function() {
-            manager.define('baz', function(id) {});
-            manager.get('baz', 1);
+            Service.define('baz', function(id) {});
+            Service.get('baz', 1);
         }, /dispatcher/);
     });
 
     it('should return service instance by name', function() {
-        var foo = manager.get('foo');
+        var foo = Service.get('foo');
         assert.ok(foo instanceof TestService);
         assert.equal(foo.config.name, 'foo');
     });
 
     it('should extends config by "__EXTEND__"', function() {
-        var bar = manager.get('bar');
+        var bar = Service.get('bar');
         assert.ok(bar instanceof TestService);
         assert.equal(bar.config.name, 'bar');
     });
 
     it('should return service instance by dispatcher function', function() {
-        var foo = manager.get('foobar', 1);
+        var foo = Service.get('foobar', 1);
         assert.ok(foo instanceof TestService);
         assert.equal(foo.config.name, 'foo');
 
-        var bar = manager.get('foobar', 2);
+        var bar = Service.get('foobar', 2);
         assert.ok(bar instanceof TestService);
         assert.equal(bar.config.name, 'bar');
     });

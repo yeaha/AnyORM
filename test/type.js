@@ -129,7 +129,7 @@ describe('Datetime type', function() {
             assert.ok(/^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/.test(Datetime.store(value)));
         });
 
-        it('should return unix timestamp by config', function() {
+        it('should return unix timestamp by attribute "unix_timestamp" is true', function() {
             var data = Datetime.store(new Date, {unix_timestamp: true});
             assert.ok(/^\d+$/.test(data));
         });
@@ -139,10 +139,10 @@ describe('Datetime type', function() {
 describe('Json type', function() {
     var Json = Type.get('json');
 
-    describe('Config normalize', function() {
+    describe('Attribute normalize', function() {
         it('should set "strict" by default', function() {
-            var config = Json.normalizeConfig({});
-            assert.ok(config.strict);
+            var attribute = Json.normalizeAttribute({});
+            assert.ok(attribute.strict);
         });
     });
 
@@ -202,23 +202,23 @@ describe('UUID type', function() {
     var re = /^[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[0-9a-f]{4}\-[0-9a-f]{12}$/;
 
     describe('Default value', function() {
-        it('should return uuid when config "primary_key" is true', function() {
-            var config = uuid.normalizeConfig({primary_key: true});
-            var id = uuid.getDefaultValue(config);
+        it('should return uuid when attribute "primary_key" is true', function() {
+            var attribute = uuid.normalizeAttribute({primary_key: true});
+            var id = uuid.getDefaultValue(attribute);
 
             assert(re.test(id));
         });
 
-        it('should return uuid when config "auto_generate" is true', function() {
-            var config = uuid.normalizeConfig({auto_generate: true});
-            var id = uuid.getDefaultValue(config);
+        it('should return uuid when attribute "auto_generate" is true', function() {
+            var attribute = uuid.normalizeAttribute({auto_generate: true});
+            var id = uuid.getDefaultValue(attribute);
 
             assert(re.test(id));
         });
 
-        it('should return upper case uuid when config "upper" is true', function() {
-            var config = uuid.normalizeConfig({auto_generate: true, upper: true});
-            var id = uuid.getDefaultValue(config);
+        it('should return upper case uuid when attribute "upper" is true', function() {
+            var attribute = uuid.normalizeAttribute({auto_generate: true, upper: true});
+            var id = uuid.getDefaultValue(attribute);
             var re = /^[0-9A-F]{8}\-[0-9A-F]{4}\-4[0-9A-F]{3}\-[0-9A-F]{4}\-[0-9A-F]{12}$/;
 
             assert(re.test(id));

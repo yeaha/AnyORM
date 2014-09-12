@@ -229,6 +229,7 @@ describe('DB Service', function() {
 
         it('quoteIdentifier()', function() {
             assert.equal(mysql.quoteIdentifier('foo.bar'), '`foo`.`bar`');
+            assert.equal(mysql.quoteIdentifier('`foo`.`bar`'), '`foo`.`bar`');
             assert.equal(pgsql.quoteIdentifier('foo.bar'), '"foo"."bar"');
             assert.equal(sqlite.quoteIdentifier('foo.bar'), '"foo"."bar"');
         });

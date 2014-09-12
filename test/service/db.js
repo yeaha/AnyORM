@@ -221,4 +221,47 @@ describe('DB Service', function() {
             assert.equal(query.values[3], 1);
         });
     });
+
+    describe('Adapter', function() {
+        var mysql = new DB.Adapter('mysql://user:pass@127.0.0.1/test');
+        var pgsql = new DB.Adapter('postgres://user:pass@127.0.0.1/test');
+        var sqlite = new DB.Adapter('sqlite3://user:pass@127.0.0.1/test');
+
+        it('quoteIdentifier()', function() {
+            assert.equal(mysql.quoteIdentifier('foo.bar'), '`foo`.`bar`');
+            assert.equal(pgsql.quoteIdentifier('foo.bar'), '"foo"."bar"');
+            assert.equal(sqlite.quoteIdentifier('foo.bar'), '"foo"."bar"');
+        });
+
+        it('insertStatement()', function() {
+            var statement = pgsql.insertStatement('foo.bar', {id: 1, foo: 'foo', bar: new DB.Expr("'bar'")});
+
+            assert.equal(statement.text, 'INSERT INTO "foo"."bar" ("id", "foo", "bar") VALUES (?, ?, \'bar\')');
+            assert.deepEqual(statement.values, [1, 'foo']);
+
+            var statement = pgsql.insertStatement('foo.bar', {id: 1, foo: 'foo', bar: 'bar'}, ['id', 'foo', 'bar']);
+            assert.equal(statement.text, 'INSERT INTO "foo"."bar" ("id", "foo", "bar") VALUES (?, ?, ?) RETURNING "id", "foo", "bar"');
+        });
+
+        it('updateStatement()', function() {
+            var statement = pgsql.updateStatement('foo.bar', {foo: new DB.Expr("'bar'"), bar: 'foo'}, 'id = ?', 1);
+
+            assert.equal(statement.text, 'UPDATE "foo"."bar" SET "foo" = \'bar\', "bar" = ? WHERE id = ?');
+            assert.deepEqual(statement.values, ['foo', 1]);
+        });
+
+        it('deleteStatement()', function() {
+            var statement = pgsql.deleteStatement('foo.bar', 'id = ?', 1);
+
+            assert.equal(statement.text, 'DELETE FROM "foo"."bar" WHERE id = ?');
+            assert.deepEqual(statement.values, [1]);
+        });
+
+        describe('Postgresql adapter', function() {
+            it('should replace placeholder "?" to "$n"', function() {
+                var sql = 'INSERT INTO "foo"."bar" ("id", "foo", "bar") VALUES (?, ?, \'?\')';
+                assert.equal(pgsql._replacePlaceholder(sql), 'INSERT INTO "foo"."bar" ("id", "foo", "bar") VALUES ($1, $2, \'?\')');
+            });
+        });
+    });
 });

@@ -92,6 +92,9 @@ var User = anyorm.defineData({
         password: {
             type: 'string',
             strict: true,
+            normalize: function(password) {
+                return this._normalizePassword(password);
+            }
         },
         // 账号是否被锁定，默认未锁定
         locked: {
@@ -109,15 +112,6 @@ var User = anyorm.defineData({
 
 User.prototype.checkPassword = function(password) {
     return this._normalizePassword(password) === this.password;
-};
-
-// 重载User._normalize()方法，加入密码的自定义格式化逻辑
-User.prototype._normalize = function(key, value) {
-    if (key == 'password') {
-        return this._normalizePassword(value);
-    }
-
-    return value;
 };
 
 // 以create_time为slat，把密码转换为md5

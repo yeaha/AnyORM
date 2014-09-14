@@ -343,11 +343,34 @@ describe('Data', function() {
             assert.notStrictEqual(data.foo, data.foo);
             assert.strictEqual(data.bar, data.bar);
 
+            assert.notStrictEqual(data.get('foo'), data.foo);
+
+            assert.notStrictEqual(data.get('bar', {clone: true}), data.bar);
+            assert.strictEqual(data.get('bar', {clone: false}), data.bar);
+
             assert.notStrictEqual(data.x, data.x);
             assert.strictEqual(data.y, data.y);
         });
 
-        it('should not include attribute "protected" property in toJSON() result', function() {
+        it('should return values when "keys" argument is array', function() {
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
+                attributes: {
+                    id: {type: 'integer', primary_key: true},
+                    foo: {type: String},
+                    bar: {type: String, protected: true},
+                }
+            });
+
+            var data = new NewData;
+            data.foo = 'foo';
+            data.bar = 'bar';
+
+            assert.equal(data.get('foo'), 'foo');
+            assert.deepEqual(data.get(['foo']), {foo: 'foo'});
+        });
+
+        it('should not include attribute "protected" property in toJSON() and get() result', function() {
             var NewData = anyorm.defineData({
                 mapper: anyorm.Mapper,
                 attributes: {
@@ -363,6 +386,9 @@ describe('Data', function() {
 
             assert.deepEqual(data.toJSON(), {foo: 'foo'});
             assert.equal(data.bar, 'bar');
+
+            assert.deepEqual(data.get(), {foo: 'foo'});
+            assert.deepEqual(data.get(['foo', 'bar']), {foo: 'foo', bar: 'bar'});
         });
     });
 });

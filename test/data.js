@@ -346,5 +346,23 @@ describe('Data', function() {
             assert.notStrictEqual(data.x, data.x);
             assert.strictEqual(data.y, data.y);
         });
+
+        it('should not include attribute "protected" property in toJSON() result', function() {
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
+                attributes: {
+                    id: {type: 'integer', primary_key: true},
+                    foo: {type: String},
+                    bar: {type: String, protected: true},
+                }
+            });
+
+            var data = new NewData;
+            data.foo = 'foo';
+            data.bar = 'bar';
+
+            assert.deepEqual(data.toJSON(), {foo: 'foo'});
+            assert.equal(data.bar, 'bar');
+        });
     });
 });

@@ -9,7 +9,7 @@ describe('Mapper', function() {
     var SimpleData = anyorm.defineData({
         mapper: SimpleMapper,
         attributes: {
-            id: {type: 'integer', primary_key: true, auto_increase: true}
+            id: {type: 'integer', primary_key: true, auto_generate: true}
         }
     });
 

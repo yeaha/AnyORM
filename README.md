@@ -77,7 +77,7 @@ var User = anyorm.defineData({
         user_id: {
             type: 'integer',
             primary_key: true,
-            auto_increase: true
+            auto_generate: true
         },
         // 用户名
         email: {
@@ -143,7 +143,7 @@ var Topic = anyorm.defineData({
     service: 'db',
     collection: 'forum.topics',
     attributes: {
-        topic_id: {type: 'integer', primary_key: true, auto_increase: true},
+        topic_id: {type: 'integer', primary_key: true, auto_generate: true},
         author: 'integer',
         reply_topic: {type: 'integer', allow_null: true},
         subject: 'string',

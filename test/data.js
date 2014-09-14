@@ -7,7 +7,7 @@ describe('Data', function() {
     var SimpleData = anyorm.defineData({
         mapper: anyorm.Mapper,
         attributes: {
-            id: {type: 'integer', primary_key: true, auto_increase: true},
+            id: {type: 'integer', primary_key: true, auto_generate: true},
         }
     });
 
@@ -302,7 +302,7 @@ describe('Data', function() {
                 var NewData = anyorm.defineData({
                     mapper: anyorm.Mapper,
                     attributes: {
-                        foo_id: {type: 'integer', primary_key: true, auto_increase: true},
+                        foo_id: {type: 'integer', primary_key: true, auto_generate: true},
                         bar_id: {type: 'integer', primary_key: true}
                     }
                 });

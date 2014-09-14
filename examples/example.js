@@ -98,6 +98,7 @@ var User = anyorm.defineData({
     mapper: UserMapper,
     service: 'db',
     collection: 'board.users',
+    cache_ttl: 300,
     attributes: {
         // 整数类型的自增长主键
         user_id: {

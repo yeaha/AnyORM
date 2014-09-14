@@ -220,6 +220,38 @@ describe('DB Service', function() {
             assert.equal(query.values[2], 'bar');
             assert.equal(query.values[3], 1);
         });
+
+        it('getPageInfo()', function() {
+            select.reset();
+
+            select.getPageInfo(1, 10, 99).then(function(info) {
+                assert.deepEqual(info, {
+                    items: 99,
+                    size: 10,
+                    from: 1,
+                    to: 10,
+                    first: 1,
+                    previous: null,
+                    current: 1,
+                    next: 2,
+                    last: 10
+                });
+            });
+
+            select.getPageInfo(2, 10, 101).then(function(info) {
+                assert.deepEqual(info, {
+                    items: 101,
+                    size: 10,
+                    from: 11,
+                    to: 20,
+                    first: 1,
+                    previous: 1,
+                    current: 2,
+                    next: 3,
+                    last: 11
+                });
+            });
+        });
     });
 
     describe('Adapter', function() {

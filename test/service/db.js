@@ -135,24 +135,24 @@ describe('DB Service', function() {
             var query = select.compile();
             assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `foo desc`');
 
-            select.reset().order({column: 'bar', sort: 'desc'});
+            select.reset().order({bar: 'desc'});
             var query = select.compile();
             assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `bar` DESC');
 
-            select.reset().order({column: 'bar', sort: 'fdjslfdjslfjsdlfjldsf'});
+            select.reset().order({bar: 'fdjslfdjslfjsdlfjldsf'});
             var query = select.compile();
             assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `bar`');
 
-            select.reset().order('foo', {column: 'bar', sort: 'desc'});
+            select.reset().order('foo', {bar: 'desc'});
             var query = select.compile();
             assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `foo`, `bar` DESC');
 
-            select.reset().order('foo', {column: 'bar', sort: 'desc'}, new DB.Expr('baz asc'));
+            select.reset().order('foo', {bar: 'desc'}, new DB.Expr('baz asc'));
             var query = select.compile();
             assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `foo`, `bar` DESC, baz asc');
 
             assert.throws(function() {
-                select.reset().order({sort: 'desc'});
+                select.reset().order(123);
             });
 
             assert.throws(function() {
@@ -209,7 +209,7 @@ describe('DB Service', function() {
                   .where('id > ?', 100)
                   .where('foo = ? or bar = ?', 'foo', 'bar')
                   .group(['foo', 'bar'], 'count(1) > ?', 1)
-                  .order('foo', {column: 'bar', sort: 'desc'})
+                  .order('foo', {bar: 'desc'})
                   .limit(10)
                   .offset(10);
 

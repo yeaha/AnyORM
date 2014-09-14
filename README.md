@@ -349,6 +349,17 @@ User.register('Foo@example.com', 'my password')
     });
 ```
 
+登录验证
+``` javascript
+User.login('foo@example.com', 'my password').then(function(user) {
+    if (user) {
+        console.log('Login success');
+    } else {
+        console.log('Login failed');
+    }
+}).catch(function(error) { console.log(error); });
+```
+
 修改密码
 ``` javascript
 User.findByEmail('foo@example.com')

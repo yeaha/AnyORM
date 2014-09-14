@@ -7,11 +7,11 @@ AnyORM是一个以[DataMapper](http://en.wikipedia.org/wiki/Data_mapper_pattern)
 
 Data主要承载业务逻辑封装，关注数据在具体业务逻辑中的使用。
 
-和ActiveRecord模式的ORM不同之处在于，Data不关心存储服务细节，这些细节都委托给Mapper来处理。
-
-不同存储服务的数据可以以相同的Data API暴露给应用，无论数据实际是存储在PostgreSQL这样的关系式数据库，还是在MongoDB这样的NoSQL数据库，最终这些数据都具有大致相同的API。
+和ActiveRecord模式的ORM不同之处在于，Data不关心存储服务细节，这些细节都委托给Mapper处理。
 
 这种把业务逻辑和存储服务隔离开的一个好处就是，当业务发展过程中需要迁移到另外一种存储服务之后，业务逻辑层不需要经受太多的改动。
+
+无论数据实际是存储在PostgreSQL这样的关系式数据库，还是在MongoDB这样的NoSQL数据库，最终这些数据都具有大致相同的API。
 
 把数据从PostgreSQL迁移到MongoDB这种情况，完全不改动已有代码基本上是不可能的，我们只能追求如何改得更少，改起来更方便。
 
@@ -38,7 +38,7 @@ AnyORM除了提供一系列常用的数据类型之外，还支持自定义数�
 快速开始
 =========================================================
 
-我将以一个简单的论坛应用进行展示，此应用包含两个Model，用户(User)和帖子(Topic)，所有的数据存储在PostgreSQL数据库中，数据库服务器的地址是127.0.0.1，数据库的名字是"forum"。
+我将以一个简单的留言板应用进行展示，此应用包含两个Model，用户(User)和帖子(Topic)，所有的数据存储在PostgreSQL数据库中，数据库服务器的地址是127.0.0.1，数据库的名字是"borad"。
 
 
 ### 定义Service
@@ -55,7 +55,7 @@ anyorm.defineService('db', {
     },
 
     // 数据库配置
-    dsn: 'postgres://user:password@127.0.0.1/forum',
+    dsn: 'postgres://user:password@127.0.0.1/board',
 
     // 连接池配置
     pool: {
@@ -71,7 +71,7 @@ anyorm.defineService('db', {
 var User = anyorm.defineData({
     mapper: anyorm.DBMapper,
     service: 'db',
-    collection: 'forum.users',
+    collection: 'board.users',
     attributes: {
         // 整数类型的自增长主键
         user_id: {
@@ -96,10 +96,11 @@ var User = anyorm.defineData({
                 return this._normalizePassword(password);
             }
         },
-        // 账号是否被锁定，默认未锁定
-        locked: {
-            type: 'integer',
-            default: '0'
+        // 账号被锁定的时间，默认不锁定
+        lock_time: {
+            type: 'datetime',
+            allow_null: true,
+            strict: true
         },
         // 注册时间，保存后不允许更新
         register_time: {
@@ -114,14 +115,52 @@ User.prototype.checkPassword = function(password) {
     return this._normalizePassword(password) === this.password;
 };
 
+User.prototype.isLocked = function() {
+    return !!this.lock_time;
+};
+
+User.prototype.lock = function() {
+    this.lock = new Date;
+    return this.save();
+};
+
+User.prototype.unlock = function() {
+    this.lock = null;
+    return this.save();
+};
+
 // 以create_time为slat，把密码转换为md5
 User.prototype._normalizePassword = function(password) {
-    password = password + this.create_time.getTime();
-    return md5(password);
+    // unix timestamp
+    var ts = (this.register_time.getTime() / 1000) >> 0;
+    password = password + ts;
+
+    var crypt = require('crypto');
+    var hash = crypt.createHash('md5');
+
+    return hash.update(password).digest('hex');
+};
+
+// return promise
+User.register = function(email, password) {
+    return User.findByEmail(email).then(function(user) {
+        if (user) {
+            throw new Error('Email已经被注册');
+        }
+
+        var user = new User;
+        user.email = email;
+        user.password = password;
+
+        return user.save();
+    });
 };
 
 // return promise
 User.findByEmail = function(email) {
+    email = email.trim();
+    assert.ok(email !== '', 'Email不允许为空');
+
     return User.getMapper().select().where('email = ?', email.toLowerCase()).getOne();
 };
 
@@ -141,7 +180,7 @@ User.login = function(email, password) {
 var Topic = anyorm.defineData({
     mapper: anyorm.DBMapper,
     service: 'db',
-    collection: 'forum.topics',
+    collection: 'board.topics',
     attributes: {
         topic_id: {type: 'integer', primary_key: true, auto_generate: true},
         author: 'integer',
@@ -155,6 +194,11 @@ var Topic = anyorm.defineData({
 // return promise
 Topic.prototype.getAuthor = function() {
     return User.find(this.author);
+};
+
+// return Service.DB.Select
+Topic.prototype.selectReply = function() {
+    return Topic.getMapper().select().where('reply_topic = ?', this.getId());
 };
 
 // return promise
@@ -266,6 +310,12 @@ anyorm.defineType('email', {
         }
 
         assert.equal(typeof value, 'string', 'email不是字符串');
+
+        value = value.trim();
+        if (value === '') {
+            return null;
+        }
+
         assert.ok(/^[a-z\.\-]+@[a-z\.\-]+\.[a-z]{2,3}$/i.test(value), '非法的email');
 
         return value.toLowerCase();
@@ -282,4 +332,73 @@ var User = anyorm.defineData({
         // ...
     }
 });
+```
+
+### 使用
+
+注册新用户
+
+``` javascript
+User.register('Foo@example.com', 'my password')
+    .then(function(user) {
+        console.log('User register success!')
+    })
+    .catch(function(error) {
+        console.log('User register failed');
+        console.log(error);
+    });
+```
+
+修改密码
+``` javascript
+User.findByEmail('foo@example.com')
+    .then(function(user) {
+        // password赋值后会自动转换为md5值
+        user.password = 'new password';
+
+        return user.save();
+    })
+    .catch(function(error) {
+        console.log(error);
+    });
+```
+
+留言
+``` javascript
+var post = {
+    subject: 'hello world!';
+    content: 'bla bla bla ...';
+};
+
+Topic.post(user, post).save().then(function(topic) {
+    console.log('Topic post success');
+    console.log(topic);
+
+    return topic.getAuthor();
+}).then(function(author) {
+    console.log('Author is', author.email);
+}).catch(function(error) { console.log(error); });
+```
+
+查询留言
+``` javascript
+user.selectTopic().then(function(topics) {
+    for (var i = 0; topic = topics[i++];) {
+        console.log(topic);
+    }
+}).catch(function(error) { console.log(error); });
+
+// 如果查询结果很大，一次性载入会很耗费内存，可以用stream的方式来处理
+User.selectTopic({return_stream: true}).then(function(stream) {
+    return new Promise(function(resolve, reject) {
+        stream.on('data', function() {
+            var topic = stream.ready();
+            console.log(topic);
+        });
+
+        stream.on('error', reject);
+
+        stream.on('end', resolve);
+    });
+}).catch(function(error) { console.log(error); });
 ```

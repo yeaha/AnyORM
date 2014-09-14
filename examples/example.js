@@ -60,7 +60,7 @@ anyorm.defineType('email', {
 
 var UserMapper = anyorm.defineMapper({
     _getCacheKey: function(id) {
-        return 'user:'+id;
+        return this.getOption('cache_prefix') + id;
     },
     _getCache: function(id) {
         var redis = Service.get('redis');
@@ -99,6 +99,7 @@ var User = anyorm.defineData({
     service: 'db',
     collection: 'board.users',
     cache_ttl: 300,
+    cache_prefix: 'user:',
     attributes: {
         // 整数类型的自增长主键
         user_id: {

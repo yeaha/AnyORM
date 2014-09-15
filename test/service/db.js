@@ -1,13 +1,15 @@
 'use strict';
 
 var assert = require('assert');
-var DB = require(__dirname+'/../../lib/service/db');
+var anyorm = require(__dirname+'/../../lib');
+var DB = anyorm.Service.DB;
+var Expr = anyorm.Utils.Expr;
 
 describe('DB Service', function() {
     var MockAdapter = function() {};
 
     MockAdapter.prototype.quoteIdentifier = function(identifier) {
-        if (identifier instanceof DB.Expr) {
+        if (identifier instanceof Expr) {
             return identifier.toString();
         }
 
@@ -16,13 +18,13 @@ describe('DB Service', function() {
 
     describe('Expr', function() {
         it('should return passed string', function() {
-            var expr = new DB.Expr('foobar');
+            var expr = new Expr('foobar');
             assert.strictEqual(expr.toString(), 'foobar');
         });
 
         it('should return passed expression string', function() {
-            var expr = new DB.Expr('foobar');
-            var other = new DB.Expr(expr);
+            var expr = new Expr('foobar');
+            var other = new Expr(expr);
 
             assert.strictEqual(other.toString(), expr.toString());
         });
@@ -46,7 +48,7 @@ describe('DB Service', function() {
             select.setColumns(['bar', 'foo']);
             assert.equal(select.compile().text, 'SELECT `bar`, `foo` FROM `foobar`');
 
-            select.setColumns('foo', new DB.Expr('bar as b'));
+            select.setColumns('foo', new Expr('bar as b'));
             assert.equal(select.compile().text, 'SELECT `foo`, bar as b FROM `foobar`');
 
             select.setColumns('*');
@@ -147,7 +149,7 @@ describe('DB Service', function() {
             var query = select.compile();
             assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `foo`, `bar` DESC');
 
-            select.reset().order('foo', {bar: 'desc'}, new DB.Expr('baz asc'));
+            select.reset().order('foo', {bar: 'desc'}, new Expr('baz asc'));
             var query = select.compile();
             assert.equal(query.text, 'SELECT * FROM `foobar` ORDER BY `foo`, `bar` DESC, baz asc');
 
@@ -198,14 +200,14 @@ describe('DB Service', function() {
             assert.equal(query.values[1], 'foo');
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            other_select = new DB.Select(adapter, new DB.Expr('(select * from `baz`) as `tmp`'));
+            other_select = new DB.Select(adapter, new Expr('(select * from `baz`) as `tmp`'));
             assert.equal(other_select.compile().text, 'SELECT * FROM (select * from `baz`) as `tmp`');
         });
 
         it('compile()', function() {
             select.reset();
 
-            select.setColumns('foo', 'bar', new DB.Expr('count(1) AS count'))
+            select.setColumns('foo', 'bar', new Expr('count(1) AS count'))
                   .where('id > ?', 100)
                   .where('foo = ? or bar = ?', 'foo', 'bar')
                   .group(['foo', 'bar'], 'count(1) > ?', 1)
@@ -267,7 +269,7 @@ describe('DB Service', function() {
         });
 
         it('insertStatement()', function() {
-            var statement = pgsql.insertStatement('foo.bar', {id: 1, foo: 'foo', bar: new DB.Expr("'bar'")});
+            var statement = pgsql.insertStatement('foo.bar', {id: 1, foo: 'foo', bar: new Expr("'bar'")});
 
             assert.equal(statement.text, 'INSERT INTO "foo"."bar" ("id", "foo", "bar") VALUES (?, ?, \'bar\')');
             assert.deepEqual(statement.values, [1, 'foo']);
@@ -277,7 +279,7 @@ describe('DB Service', function() {
         });
 
         it('updateStatement()', function() {
-            var statement = pgsql.updateStatement('foo.bar', {foo: new DB.Expr("'bar'"), bar: 'foo'}, 'id = ?', 1);
+            var statement = pgsql.updateStatement('foo.bar', {foo: new Expr("'bar'"), bar: 'foo'}, 'id = ?', 1);
 
             assert.equal(statement.text, 'UPDATE "foo"."bar" SET "foo" = \'bar\', "bar" = ? WHERE id = ?');
             assert.deepEqual(statement.values, ['foo', 1]);

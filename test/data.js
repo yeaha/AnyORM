@@ -367,7 +367,6 @@ describe('Data', function() {
             data.bar = 'bar';
 
             assert.equal(data.get('foo'), 'foo');
-            assert.deepEqual(data.get(['foo']), {foo: 'foo'});
         });
 
         it('should not include attribute "protected" property in toJSON() and get() result', function() {
@@ -387,8 +386,9 @@ describe('Data', function() {
             assert.deepEqual(data.toJSON(), {foo: 'foo'});
             assert.equal(data.bar, 'bar');
 
-            assert.deepEqual(data.get(), {foo: 'foo'});
-            assert.deepEqual(data.get(['foo', 'bar']), {foo: 'foo', bar: 'bar'});
+            assert.deepEqual(data.pick(), {foo: 'foo'});
+            assert.deepEqual(data.pick('foo'), {foo: 'foo'});
+            assert.deepEqual(data.pick(['foo', 'bar']), {foo: 'foo', bar: 'bar'});
         });
     });
 });

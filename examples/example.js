@@ -115,7 +115,7 @@ var User = anyorm.defineData({
         // 密码
         password: {
             type: 'string',
-            strict: true,
+            protected: true,
             normalize: function(password) {
                 return this._normalizePassword(password);
             }
@@ -153,12 +153,12 @@ User.prototype.isLocked = function() {
 };
 
 User.prototype.lock = function() {
-    this.lock = new Date;
+    this.lock_time = new Date;
     return this.save();
 };
 
 User.prototype.unlock = function() {
-    this.lock = null;
+    this.lock_time = null;
     return this.save();
 };
 

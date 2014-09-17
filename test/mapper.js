@@ -9,7 +9,12 @@ describe('Mapper', function() {
     var SimpleData = anyorm.defineData({
         mapper: SimpleMapper,
         attributes: {
-            id: {type: 'integer', primary_key: true, auto_generate: true}
+            id: {type: 'integer', primary_key: true, auto_generate: true},
+            a: Number,
+            b: 'integer',
+            c: 'string',
+            d: {type: 'datetime', unix_timestamp: true},
+            e: 'json'
         }
     });
 
@@ -19,5 +24,61 @@ describe('Mapper', function() {
         assert.throws(function() {
             mapper.getOption('foobar', true);
         });
+    });
+
+    it('unpack()', function() {
+        var data = new SimpleData;
+        data.merge({
+            a: 1.2,
+            b: 100,
+            c: 'foobar',
+            d: 1409564951,
+        });
+
+        data.e = {x: 'x', y: 'y'};
+
+        var record = data.getMapper().unpack(data);
+        assert.deepEqual(record, {
+            a: 1.2,
+            b: 100,
+            c: 'foobar',
+            d: 1409564951,
+            e: '{"x":"x","y":"y"}'
+        });
+
+        data._dirty = {};
+        assert.deepEqual(data.getMapper().unpack(data, true), {});
+
+        data._dirty = {a: true, b: true, c: true};
+        assert.deepEqual(data.getMapper().unpack(data, true), {
+            a: 1.2,
+            b: 100,
+            c: 'foobar',
+        });
+    });
+
+    it('pack()', function() {
+        var mapper = SimpleData.getMapper();
+
+        var data = mapper.pack({
+            a: 1.2,
+            b: 100,
+            c: 'foobar',
+            d: 1409564951,
+            e: '{"x":"x","y":"y"}'
+        });
+
+        assert.ok(data.isFresh() === false);
+        assert.ok(data.isDirty() === false);
+
+        assert.ok(data.d instanceof Date);
+        assert.ok(data.e.x === 'x');
+
+        data.c = 'foo';
+        assert.ok(data.isDirty() === true);
+
+        mapper.pack({c: 'bar'}, data);
+        assert.ok(data.isDirty() === false);
+        assert.ok(data.c === 'bar');
     });
 });

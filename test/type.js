@@ -156,7 +156,6 @@ describe('Json type', function() {
 
     describe('Value store', function() {
         it('should return null when the value is empty', function() {
-            assert.strictEqual(Json.store(null), null);
             assert.strictEqual(Json.store({}), null);
             assert.strictEqual(Json.store([]), null);
         });

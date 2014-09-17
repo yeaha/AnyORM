@@ -28,13 +28,17 @@ describe('Numeric type', function() {
             assert.strictEqual(Numeric.normalize(-1), -1);
             assert.strictEqual(Numeric.normalize('1'), 1);
             assert.strictEqual(Numeric.normalize('1.1'), 1.1);
-            assert.strictEqual(Numeric.normalize('abc'), 0);
-            assert.strictEqual(Numeric.normalize(undefined), 0);
         });
 
         it('should throw error when the value is Infinity', function() {
             assert.throws(function() {
                 Numeric.normalize(1/0);
+            });
+        });
+
+        it('should throw error when the value is not number', function() {
+            assert.throws(function() {
+                Numeric.normalize('abc');
             });
         });
     });
@@ -48,12 +52,17 @@ describe('Integer type', function() {
             assert.strictEqual(Integer.normalize('1'), 1);
             assert.strictEqual(Integer.normalize('1.1'), 1);
             assert.strictEqual(Integer.normalize(1.9), 1);
-            assert.strictEqual(Integer.normalize('abc'), 0);
         });
 
         it('should throw error when the value is Infinity', function() {
             assert.throws(function() {
                 Integer.normalize(1/0);
+            });
+        });
+
+        it('should throw error when the value is not number', function() {
+            assert.throws(function() {
+                Integer.normalize('abc');
             });
         });
     });

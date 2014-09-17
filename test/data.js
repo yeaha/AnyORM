@@ -286,6 +286,25 @@ describe('Data', function() {
             data.foo = 'foo';
             assert.strictEqual(data.foo, 'foo');
         });
+
+        it('should change Data to dirty after change property value', function() {
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
+                attributes: {
+                    id: {type: 'integer', primary_key: true},
+                    foo: {type: String},
+                    bar: String,
+                }
+            });
+
+            var data = NewData.getMapper().pack({});
+            assert.ok(data.isDirty() === false);
+
+            data.foo = 'foo';
+            assert.ok(data.isDirty() === true);
+            assert.ok(data.isDirty('foo') === true);
+            assert.ok(data.isDirty('bar') === false);
+        });
     });
 
     describe('Get property', function() {

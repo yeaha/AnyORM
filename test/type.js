@@ -5,10 +5,6 @@ var Type = anyorm.Type;
 describe('Default type', function() {
     var Default = Type.get();
 
-    it('should return null when the value is empty string', function() {
-        assert.strictEqual(Default.normalize(''), null);
-    });
-
     describe('Value normalize', function() {
         it('should return passed value back', function() {
             assert.strictEqual(Default.normalize(null), null);
@@ -27,11 +23,6 @@ describe('Numeric type', function() {
     });
 
     describe('Value normalize', function() {
-        it('should return null when the value is null or empty string', function() {
-            assert.strictEqual(Numeric.normalize(null), null);
-            assert.strictEqual(Numeric.normalize(''), null);
-        });
-
         it('should always return numeric result', function() {
             assert.strictEqual(Numeric.normalize(1), 1);
             assert.strictEqual(Numeric.normalize(-1), -1);
@@ -53,11 +44,6 @@ describe('Integer type', function() {
     var Integer = Type.get('integer');
 
     describe('Value normalize', function() {
-        it('should return null when the value is null or empty string', function() {
-            assert.strictEqual(Integer.normalize(null), null);
-            assert.strictEqual(Integer.normalize(''), null);
-        });
-
         it('should always return integer result', function() {
             assert.strictEqual(Integer.normalize('1'), 1);
             assert.strictEqual(Integer.normalize('1.1'), 1);
@@ -81,11 +67,6 @@ describe('Text type', function() {
     });
 
     describe('Value normalize', function() {
-        it('should return null when the value is null or empty string', function() {
-            assert.strictEqual(Text.normalize(null), null);
-            assert.strictEqual(Text.normalize(''), null);
-        });
-
         it('should always return string result', function() {
             assert.strictEqual(Text.normalize(0), '0');
             assert.strictEqual(Text.normalize(1.1), '1.1');
@@ -102,11 +83,6 @@ describe('Datetime type', function() {
     });
 
     describe('Value normalize', function() {
-        it('should return null when the value is null or empty string', function() {
-            assert.strictEqual(Datetime.normalize(null), null);
-            assert.strictEqual(Datetime.normalize(''), null);
-        });
-
         it('should convert unix timestamp to Date value', function() {
             var ts = 1409564951;
             var value = Datetime.normalize(ts, {unix_timestamp: true});
@@ -147,11 +123,6 @@ describe('Json type', function() {
     });
 
     describe('Value normalize', function() {
-        it('should return null when the value is null or empty string', function() {
-            assert.strictEqual(Json.normalize(null), null);
-            assert.strictEqual(Json.normalize(''), null);
-        });
-
         it('should always return object', function() {
             var value = Json.normalize({foo: 'bar'});
             assert.ok(typeof value === 'object');

@@ -12,7 +12,7 @@ describe('Mapper', function() {
             id: {type: 'integer', primary_key: true, auto_generate: true},
             a: Number,
             b: 'integer',
-            c: 'string',
+            c: {type: 'string', default: 'foobar'},
             d: {type: 'datetime', unix_timestamp: true},
             e: 'json'
         }
@@ -57,28 +57,48 @@ describe('Mapper', function() {
         });
     });
 
-    it('pack()', function() {
-        var mapper = SimpleData.getMapper();
+    describe('pack()', function() {
+        it('should pack into Data', function() {
+            var mapper = SimpleData.getMapper();
 
-        var data = mapper.pack({
-            a: 1.2,
-            b: 100,
-            c: 'foobar',
-            d: 1409564951,
-            e: '{"x":"x","y":"y"}'
+            var data = mapper.pack({
+                a: 1.2,
+                b: 100,
+                c: 'foobar',
+                d: 1409564951,
+                e: '{"x":"x","y":"y"}'
+            });
+
+            assert.ok(data.isFresh() === false);
+            assert.ok(data.isDirty() === false);
+
+            assert.ok(data.d instanceof Date);
+            assert.ok(data.e.x === 'x');
+
+            data.c = 'foo';
+            assert.ok(data.isDirty() === true);
+
+            mapper.pack({c: 'bar'}, data);
+            assert.ok(data.isDirty() === false);
+            assert.ok(data.c === 'bar');
         });
 
-        assert.ok(data.isFresh() === false);
-        assert.ok(data.isDirty() === false);
+        it('should replace default value with record', function() {
+            var mapper = SimpleData.getMapper();
 
-        assert.ok(data.d instanceof Date);
-        assert.ok(data.e.x === 'x');
+            var data = new SimpleData;
+            assert.equal(data.c, 'foobar');
 
-        data.c = 'foo';
-        assert.ok(data.isDirty() === true);
+            data = mapper.pack({a: 1});
+            assert.strictEqual(data.c, null);
+        });
 
-        mapper.pack({c: 'bar'}, data);
-        assert.ok(data.isDirty() === false);
-        assert.ok(data.c === 'bar');
+        it('should ignore undefined property', function() {
+            var mapper = SimpleData.getMapper();
+            var data = mapper.pack({a: 0, x: 1});
+
+            assert.ok(data._values.hasOwnProperty('a'))
+            assert.ok(!data._values.hasOwnProperty('x'))
+        });
     });
 });

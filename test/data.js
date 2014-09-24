@@ -234,13 +234,22 @@ describe('Data', function() {
                 }
             });
 
-            var data = NewData.getMapper().pack({id: 1});
+            var data = new NewData;
+            data._dirty = {};
             assert(data.isDirty() === false);
 
             data.foo = 'foo';
             assert(data.isDirty() === false);
 
             data.foo = 'bar';
+            assert(data.isDirty() === true);
+
+            // ~~~~~~~~~~~~~~~~~~~~~~
+
+            data = NewData.getMapper().pack({id: 1});
+            assert(data.isDirty() === false);
+
+            data.foo = 'foo';
             assert(data.isDirty() === true);
         });
 

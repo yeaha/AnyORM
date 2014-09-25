@@ -99,6 +99,14 @@ describe('Mapper', function() {
             assert.ok(data.isDirty('foo') === true);
             assert.strictEqual(data.foo, 'foo');
 
+            return data.save();
+        }).then(function(data) {
+            assert.ok(data.isDirty() === false);
+
+            return SimpleData.find('4414752c-5f25-461a-9146-e250acd8f774')
+        }).then(function(data) {
+            assert.ok(data.isDirty() === false);
+
             return SimpleData.find('38b96b06-486c-465a-8210-03e4ffd9183b')
         }).then(function(data) {
             assert.ok(data.isDirty('foo') === false);

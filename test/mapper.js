@@ -83,16 +83,6 @@ describe('Mapper', function() {
             assert.ok(data.c === 'bar');
         });
 
-        it('should replace default value with record', function() {
-            var mapper = SimpleData.getMapper();
-
-            var data = new SimpleData;
-            assert.equal(data.c, 'foobar');
-
-            data = mapper.pack({a: 1});
-            assert.strictEqual(data.c, null);
-        });
-
         it('should ignore undefined property', function() {
             var mapper = SimpleData.getMapper();
             var data = mapper.pack({a: 0, x: 1});

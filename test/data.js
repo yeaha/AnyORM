@@ -225,7 +225,7 @@ describe('Data', function() {
             assert(data.isDirty() === true);
         });
 
-        it('should unchange when the value is strict equal default value', function() {
+        it('should unchange when the value is strict equal old value', function() {
             var NewData = anyorm.defineData({
                 mapper: anyorm.Mapper,
                 attributes: {
@@ -234,14 +234,11 @@ describe('Data', function() {
                 }
             });
 
-            var data = NewData.getMapper().pack({id: 1});
-            assert(data.isDirty() === false);
-
-            data.foo = 'foo';
+            var data = NewData.getMapper().pack({id: 1, foo: 'bar'});
             assert(data.isDirty() === false);
 
             data.foo = 'bar';
-            assert(data.isDirty() === true);
+            assert(data.isDirty() === false);
         });
 
         it('should set normalized value by attribute normalize function', function() {

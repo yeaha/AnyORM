@@ -83,6 +83,14 @@ describe('Mapper', function() {
             assert.ok(data.c === 'bar');
         });
 
+        it('should keep unchanged property as dirty', function() {
+            var mapper = SimpleData.getMapper();
+            var data = mapper.pack({a: 1});
+
+            assert.ok(data.isDirty('a') === false);
+            assert.ok(data.isDirty('c') === true);
+        });
+
         it('should ignore undefined property', function() {
             var mapper = SimpleData.getMapper();
             var data = mapper.pack({a: 0, x: 1});

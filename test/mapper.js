@@ -58,6 +58,8 @@ describe('Mapper', function() {
     });
 
     it('CRUD', function(done) {
+        this.timeout(1000);
+
         var id;
 
         var SimpleData = anyorm.defineData({
@@ -96,8 +98,8 @@ describe('Mapper', function() {
 
             return SimpleData.find('4414752c-5f25-461a-9146-e250acd8f774')
         }).then(function(data) {
-            assert.ok(data.isDirty('foo') === true);
-            assert.strictEqual(data.foo, 'foo');
+            assert.ok(data.isDirty('foo') === false);
+            assert.strictEqual(data.foo, null);
 
             return data.save();
         }).then(function(data) {
@@ -182,14 +184,6 @@ describe('Mapper', function() {
             mapper.pack({c: 'bar'}, data);
             assert.ok(data.isDirty() === false);
             assert.ok(data.c === 'bar');
-        });
-
-        it('should keep unchanged property as dirty', function() {
-            var mapper = SimpleData.getMapper();
-            var data = mapper.pack({a: 1});
-
-            assert.ok(data.isDirty('a') === false);
-            assert.ok(data.isDirty('c') === true);
         });
 
         it('should ignore undefined property', function() {

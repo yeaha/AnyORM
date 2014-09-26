@@ -67,40 +67,29 @@ describe('Data', function() {
     });
 
     describe('New instance', function() {
-        it('should be fresh', function() {
-            var data = new SimpleData;
-            assert(data.isFresh());
+        var NewData = anyorm.defineData({
+            mapper: anyorm.Mapper,
+            attributes: {
+                id: {type: 'uuid', primary_key: true, auto_generate: true},
+                foo: {type: 'string', refuse_update: true},
+            }
         });
 
-        it('should be dirty when initialize with values', function() {
-            var NewData = anyorm.defineData({
-                mapper: anyorm.Mapper,
-                attributes: {
-                    id: {type: 'integer', primary_key: true},
-                    foo: String
-                }
-            });
+        it('with default options', function() {
+            var data = new NewData({foo: 'bar'});
 
-            var data = new NewData({foo: 'foo'});
-            assert(data.isDirty());
+            assert.ok(data.isFresh() === true);
+            assert.ok(data.isDirty('foo') === true);
+            assert.ok(data.isDirty('id') === true);
+            assert.ok(data.id);
         });
 
-        it('should set default value after initialize', function() {
-            var NewData = anyorm.defineData({
-                mapper: anyorm.Mapper,
-                attributes: {
-                    id: {type: 'integer', primary_key: true},
-                    a: {type: 'integer', default: 0},
-                    b: {type: String, default: 'foo'},
-                }
-            });
+        it('options.fresh = false', function() {
+            var data = new NewData({foo: 'bar'}, {fresh: false});
 
-            var data = new NewData;
-            assert.strictEqual(data._values['id'], undefined);
-            assert.strictEqual(data._values['a'], 0);
-            assert.strictEqual(data._values['b'], 'foo');
-
-            assert(data.isDirty());
+            assert.ok(data.isFresh() === false);
+            assert.ok(data.isDirty() === false);
+            assert.ok(data.id === null);
         });
     });
 
@@ -132,6 +121,13 @@ describe('Data', function() {
             });
 
             assert(data.isDirty() === false);
+
+            // not throw error when option "force" is on
+            assert.doesNotThrow(function() {
+                data.set('bar', 'baz', {force: true});
+            });
+
+            assert(data.isDirty('bar') === true);
 
             // refuse_update not work on fresh instance
             assert.doesNotThrow(function() {

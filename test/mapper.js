@@ -150,10 +150,10 @@ describe('Mapper', function() {
         });
 
         data._dirty = {};
-        assert.deepEqual(data.getMapper().unpack(data, true), {});
+        assert.deepEqual(data.getMapper().unpack(data, {dirty: true}), {});
 
         data._dirty = {a: true, b: true, c: true};
-        assert.deepEqual(data.getMapper().unpack(data, true), {
+        assert.deepEqual(data.getMapper().unpack(data, {dirty: true}), {
             a: 1.2,
             b: 100,
             c: 'foobar',

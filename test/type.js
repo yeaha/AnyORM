@@ -13,6 +13,15 @@ describe('Default type', function() {
             assert.strictEqual(Default.normalize(0), 0);
         });
     });
+
+    it('getDefaultValue()', function() {
+        assert.strictEqual(Default.getDefaultValue({allow_null: true, default: 'foo'}), null);
+        assert.strictEqual(Default.getDefaultValue({default: 'foo'}), 'foo');
+    });
+
+    it('should return return null when restore null value', function() {
+        assert.strictEqual(Default.restore(null), null);
+    });
 });
 
 describe('Numeric type', function() {
@@ -173,6 +182,12 @@ describe('Json type', function() {
             assert.strictEqual(Json.store([1, 2, 3]), '[1,2,3]');
             assert.strictEqual(Json.store({foo: 'bar'}), '{"foo":"bar"}');
         });
+    });
+
+    it('should return return empty hash when restore null value', function() {
+        var value = Json.restore(null);
+
+        assert.ok(typeof value == 'object');
     });
 });
 

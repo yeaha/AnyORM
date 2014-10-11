@@ -89,7 +89,6 @@ describe('Data', function() {
 
             assert.ok(data.isFresh() === false);
             assert.ok(data.isDirty() === false);
-            assert.ok(data.id === null);
         });
     });
 

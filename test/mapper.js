@@ -99,7 +99,7 @@ describe('Mapper', function() {
             return SimpleData.find('4414752c-5f25-461a-9146-e250acd8f774')
         }).then(function(data) {
             assert.ok(data.isDirty('foo') === false);
-            assert.strictEqual(data.foo, null);
+            assert.strictEqual(data.foo, 'foo');
 
             return data.save();
         }).then(function(data) {

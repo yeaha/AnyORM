@@ -1,7 +1,7 @@
 {
     "name": "anyorm",
     "author": "yangyi.cn.gz@gmail.com",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "description": "Object Relational Mapper for node.js",
     "main": "./lib",
     "repository": {
@@ -10,7 +10,9 @@
     },
     "keywords": [
         "DataMapper",
-        "ORM"
+        "ORM",
+        "MySQL",
+        "PostgreSQL"
     ],
     "license": "MIT",
     "dependencies": {

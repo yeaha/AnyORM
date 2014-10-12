@@ -2,7 +2,7 @@
 
 var assert = require("assert");
 var anyorm = require("../");
-var _ = require('underscore');
+var _ = require('lodash');
 
 describe('Mapper', function() {
     var simple_collection = {

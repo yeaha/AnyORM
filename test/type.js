@@ -2,6 +2,28 @@ var assert = require("assert");
 var anyorm = require("../");
 var Type = anyorm.Type;
 
+describe('normalize attribute', function() {
+    var normalizeAttribute = Type.normalizeAttribute;
+
+    it('should set "default" to null when "allow_null" is true', function() {
+        var attribute = normalizeAttribute({default: 'foo', allow_null: true});
+        assert.ok(attribute.default === null);
+    });
+
+    it('should set "strict" to true when "protected" is true', function() {
+        var attribute = normalizeAttribute({protected: true});
+        assert.ok(attribute.strict === true);
+    });
+
+    it('should set "refuse_update" "strict" to true, "allow_null" to false, when "primary_key" is true', function() {
+        var attribute = normalizeAttribute({primary_key: true});
+
+        assert.ok(attribute.allow_null === false);
+        assert.ok(attribute.refuse_update === true);
+        assert.ok(attribute.strict === true);
+    });
+});
+
 describe('Default type', function() {
     var Default = Type.get();
 
@@ -15,7 +37,6 @@ describe('Default type', function() {
     });
 
     it('getDefaultValue()', function() {
-        assert.strictEqual(Default.getDefaultValue({allow_null: true, default: 'foo'}), null);
         assert.strictEqual(Default.getDefaultValue({default: 'foo'}), 'foo');
     });
 

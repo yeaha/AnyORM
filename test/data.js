@@ -334,15 +334,13 @@ describe('Data', function() {
             });
         });
 
-        it('should return clone value when object type attribute config "clone" is true', function() {
+        it('should return clone value when type is object', function() {
             var NewData = anyorm.defineData({
                 mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
                     foo: {type: 'datetime', default: 'now'},
-                    bar: {type: 'datetime', default: 'now', clone: false},
-                    x: 'json',
-                    y: {type: 'json', clone: false},
+                    bar: 'json',
                 }
             });
 
@@ -352,15 +350,7 @@ describe('Data', function() {
             });
 
             assert.notStrictEqual(data.foo, data.foo);
-            assert.strictEqual(data.bar, data.bar);
-
-            assert.notStrictEqual(data.get('foo'), data.foo);
-
-            assert.notStrictEqual(data.get('bar', {clone: true}), data.bar);
-            assert.strictEqual(data.get('bar', {clone: false}), data.bar);
-
-            assert.notStrictEqual(data.x, data.x);
-            assert.strictEqual(data.y, data.y);
+            assert.notStrictEqual(data.bar, data.bar);
         });
 
         it('should return values when "keys" argument is array', function() {

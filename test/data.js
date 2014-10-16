@@ -391,5 +391,18 @@ describe('Data', function() {
             assert.deepEqual(data.pick('foo'), {foo: 'foo'});
             assert.deepEqual(data.pick(['foo', 'bar']), {foo: 'foo', bar: 'bar'});
         });
+
+        it('should return function result when "default" is function', function() {
+            var NewData = anyorm.defineData({
+                mapper: anyorm.Mapper,
+                attributes: {
+                    id: {type: 'integer', primary_key: true},
+                    foo: {type: String, default: function() { return 'foo'; }}
+                }
+            });
+
+            var data = new NewData;
+            assert.equal(data.foo, 'foo');
+        });
     });
 });

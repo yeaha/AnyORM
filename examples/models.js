@@ -1,4 +1,5 @@
-var Promise = require('bluebird');
+'use strict';
+
 var assert = require('assert');
 var anyorm = require(__dirname+'/../');
 var Service = anyorm.Service;
@@ -22,14 +23,14 @@ anyorm.defineType('email', {
             return null;
         }
 
-        assert.equal(typeof value, 'string', 'email不是字符串');
+        assert.equal(typeof value, 'string', 'Invalid email');
 
         value = value.trim();
         if (value === '') {
             return null;
         }
 
-        assert.ok(/^[a-z\.\-]+@[a-z\.\-]+\.[a-z]{2,3}$/i.test(value), '非法的email');
+        assert.ok(/^[a-z\.\-]+@[a-z\.\-]+\.[a-z]{2,3}$/i.test(value), 'Invalid email');
 
         return value.toLowerCase();
     }
@@ -54,7 +55,7 @@ var User = anyorm.defineData({
             type: 'string',
             protected: true,
             normalize: function(password) {
-                return this._normalizePassword(password);
+                return this._normalizePassword(password, true);
             }
         },
         password_salt: {
@@ -100,7 +101,7 @@ User.prototype.unlock = function() {
 };
 
 User.prototype.checkPassword = function(password) {
-    return this._normalizePassword(password) === this.password;
+    return this._normalizePassword(password, true) === this.password;
 };
 
 User.prototype.refreshPasswordSalt = function(password) {
@@ -112,7 +113,11 @@ User.prototype.refreshPasswordSalt = function(password) {
     this.password = password;
 };
 
-User.prototype._normalizePassword = function(password) {
+User.prototype._normalizePassword = function(password, ok) {
+    if (ok === undefined) {
+        throw new Error('"this.password = this._normalizePassword(password)" is incorrect, use "this.password = password"');
+    }
+
     password += this.password_salt;
 
     var crypt = require('crypto');
@@ -130,7 +135,7 @@ User.prototype._generatePasswordSalt = function() {
 User.register = function(email, password) {
     return User.findByEmail(email).then(function(user) {
         if (user) {
-            throw new Error('Email已经被注册');
+            throw new Error('Email "'+user.email+'" was registered');
         }
 
         var user = new User;

@@ -93,6 +93,24 @@ var TopicMapper = anyorm.defineMapper({
         }.bind(this));
     },
 
+    // insert into master
+    doInsert: function(data) {
+        var db = Service.get('master');
+        return DBMapper.prototype.doInsert.call(this, data, db);
+    },
+
+    // update master
+    doUpdate: function(data) {
+        var db = Service.get('master');
+        return DBMapper.prototype.doUpdate.call(this, data, db);
+    },
+
+    // delete from master
+    doDelete: function(data) {
+        var db = Service.get('master');
+        return DBMapper.prototype.doDelete.call(this, data, db);
+    },
+
     _set_status: function(id, status) {
         var redis = Service.get('redis');
         var key = 'topic_status_'+id;
@@ -111,7 +129,7 @@ var TopicMapper = anyorm.defineMapper({
 
 var Topic = anyorm.defineData({
     mapper: TopicMapper,
-    service: 'master',
+    service: 'slave',
     collection: 'board.topics',
     attributes: {
         topic_id: {type: 'integer', primary_key: true, auto_generate: true},

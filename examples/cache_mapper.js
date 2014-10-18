@@ -34,6 +34,7 @@ anyorm.defineService({
     }
 });
 
+// TopicMapper inherit anyorm.CacheDBMapper
 var TopicMapper = anyorm.defineMapper({
     _getCacheKey: function(id) {
         return this.getOption('cache_prefix') + id;

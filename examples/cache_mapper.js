@@ -6,7 +6,7 @@ var Service = anyorm.Service;
 
 anyorm.defineService({
     database: {
-        factory: function(options) {
+        generate: function(options) {
             return new Service.DB.Adapter(options.dsn, options.pool);
         },
 
@@ -18,7 +18,7 @@ anyorm.defineService({
     },
 
     redis: {
-        factory: function(options) {
+        generate: function(options) {
             return Service.Redis.createPool(options.pool, options.client);
         },
 

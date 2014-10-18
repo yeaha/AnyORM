@@ -6,7 +6,7 @@ var Service = anyorm.Service;
 
 Service.define({
     'serial.db': {
-        factory: function(options) {
+        generate: function(options) {
             return new Service.DB.Adapter(options.dsn, options.pool);
         },
 
@@ -18,7 +18,7 @@ Service.define({
     },
 
     'topic.db.0': {
-        factory: function(options) {
+        generate: function(options) {
             return new Service.DB.Adapter(options.dsn, options.pool);
         },
 
@@ -30,7 +30,7 @@ Service.define({
     },
 
     'topic.db.1': {
-        factory: function(options) {
+        generate: function(options) {
             return new Service.DB.Adapter(options.dsn, options.pool);
         },
 

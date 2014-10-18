@@ -4,7 +4,7 @@ var anyorm = require(__dirname+'/../');
 var Service = anyorm.Service;
 
 anyorm.defineService('db', {
-    factory: function(options) {
+    generate: function(options) {
         return new Service.DB.Adapter(options.dsn, options.pool);
     },
 

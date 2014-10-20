@@ -80,7 +80,7 @@ var Topic = anyorm.defineData({
         topic_id: {type: 'integer', primary_key: true},
         subject: 'string',
         content: 'string',
-        create_time: {type: 'datetime', refuse_update: true, default: 'now'}
+        create_time: {type: 'datetime', refuse_update: true, default_value: 'now'}
     }
 });
 

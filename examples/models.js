@@ -61,7 +61,7 @@ var User = anyorm.defineData({
         password_salt: {
             type: 'string',
             protected: true,
-            default: function() {
+            default_value: function() {
                 return this._generatePasswordSalt();
             }
         },
@@ -73,7 +73,7 @@ var User = anyorm.defineData({
         create_time: {
             type: 'datetime',
             refuse_update: true,
-            default: 'now'
+            default_value: 'now'
         },
         update_time: {
             type: 'datetime',
@@ -180,7 +180,7 @@ var Topic = anyorm.defineData({
         reply_topic: {type: 'integer', allow_null: true},
         subject: 'string',
         content: 'string',
-        create_time: {type: 'datetime', refuse_update: true, default: 'now'}
+        create_time: {type: 'datetime', refuse_update: true, default_value: 'now'}
     }
 });
 

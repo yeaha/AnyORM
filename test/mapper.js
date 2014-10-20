@@ -66,7 +66,7 @@ describe('Mapper', function() {
             mapper: SimpleMapper,
             attributes: {
                 id: {type: 'uuid', primary_key: true},
-                foo: {type: 'string', default: 'foo'},
+                foo: {type: 'string', default_value: 'foo'},
                 bar: {type: 'string'}
             }
         });
@@ -123,7 +123,7 @@ describe('Mapper', function() {
             id: {type: 'integer', primary_key: true, auto_generate: true},
             a: Number,
             b: 'integer',
-            c: {type: 'string', default: 'foobar'},
+            c: {type: 'string', default_value: 'foobar'},
             d: {type: 'datetime', unix_timestamp: true},
             e: 'json'
         }

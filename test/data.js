@@ -225,7 +225,7 @@ describe('Data', function() {
                 mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
-                    foo: {type: String, default: 'foo'},
+                    foo: {type: String, default_value: 'foo'},
                 }
             });
 
@@ -339,7 +339,7 @@ describe('Data', function() {
                 mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
-                    foo: {type: 'datetime', default: 'now'},
+                    foo: {type: 'datetime', default_value: 'now'},
                     bar: 'json',
                 }
             });
@@ -397,7 +397,7 @@ describe('Data', function() {
                 mapper: anyorm.Mapper,
                 attributes: {
                     id: {type: 'integer', primary_key: true},
-                    foo: {type: String, default: function() { return 'foo'; }}
+                    foo: {type: String, default_value: function() { return 'foo'; }}
                 }
             });
 

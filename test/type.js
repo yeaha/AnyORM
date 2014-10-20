@@ -6,8 +6,8 @@ describe('normalize attribute', function() {
     var normalizeAttribute = Type.normalizeAttribute;
 
     it('should set "default" to null when "allow_null" is true', function() {
-        var attribute = normalizeAttribute({default: 'foo', allow_null: true});
-        assert.ok(attribute.default === null);
+        var attribute = normalizeAttribute({default_value: 'foo', allow_null: true});
+        assert.ok(attribute.default_value === null);
     });
 
     it('should set "strict" to true when "protected" is true', function() {
@@ -37,7 +37,7 @@ describe('Default type', function() {
     });
 
     it('getDefaultValue()', function() {
-        assert.strictEqual(Default.getDefaultValue({default: 'foo'}), 'foo');
+        assert.strictEqual(Default.getDefaultValue({default_value: 'foo'}), 'foo');
     });
 
     it('should return return null when restore null value', function() {

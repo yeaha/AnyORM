@@ -1,7 +1,7 @@
 {
     "name": "anyorm",
     "author": "yangyi.cn.gz@gmail.com",
-    "version": "0.2.12",
+    "version": "0.2.13",
     "description": "Object Relational Mapper for node.js",
     "main": "./lib",
     "repository": {

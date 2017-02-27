@@ -1,37 +1,27 @@
 {
-    "name": "anyorm",
-    "author": "yangyi.cn.gz@gmail.com",
-    "version": "0.2.13",
-    "description": "Object Relational Mapper for node.js",
-    "main": "./lib",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/yeaha/AnyORM.git"
-    },
-    "keywords": [
-        "DataMapper",
-        "ORM",
-        "MySQL",
-        "PostgreSQL"
-    ],
-    "license": "MIT",
-    "dependencies": {
-        "bluebird": "~2.3.2",
-        "lodash": "~2.4",
-        "node-uuid": "1.x"
-    },
-    "devDependencies": {
-        "mocha": "1.x"
-    },
-    "optionalDependencies": {
-        "any-db": "~2.1.0",
-        "any-db-mysql": "~2.1.0",
-        "any-db-postgres": "~2.1.3",
-        "any-db-transaction": "~2.2.1",
-        "generic-pool": "~2.1.1",
-        "redis": "0.x"
-    },
-    "scripts": {
-        "test": "mocha ./test"
-    }
+  "name": "anyorm",
+  "author": "yangyi.cn.gz@gmail.com",
+  "version": "0.2.13",
+  "description": "Object Relational Mapper for node.js",
+  "main": "./lib",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yeaha/AnyORM.git"
+  },
+  "keywords": [
+    "DataMapper",
+    "ORM",
+    "MySQL",
+    "PostgreSQL"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha ./test"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.5",
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^3.1.5",
+    "gulp-watch": "^4.3.11"
+  }
 }

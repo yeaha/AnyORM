@@ -1,13 +1,23 @@
 import * as _ from 'lodash';
 
-export interface Attribute {
-    type?: string;
+export interface AttributeOptions {
+    type: string;
     primary_key?: boolean;
     default?: any;
     allow_null?: boolean;
+    refuse_update?: boolean;
     protected?: boolean;
     strict?: boolean;
     [propName: string]: any;
+}
+
+export interface Attribute extends AttributeOptions {
+    primary_key: boolean;
+    default: any;
+    allow_null: boolean;
+    refuse_update: boolean;
+    protected: boolean;
+    strict: boolean;
 }
 
 export interface TypeInterface {
@@ -21,18 +31,31 @@ export interface TypeInterface {
     isNull(value): boolean;
 }
 
-export function normalizeAttribute(attribute: Attribute): Attribute {
-    const defaults = {
+export function normalizeAttribute(attribute: AttributeOptions): Attribute {
+    const defaults: Attribute = {
         type: 'any',
         primary_key: false,
         default: null,
         allow_null: false,
+        refuse_update: false,
         protected: false,
+        strict: false,
     };
 
-    attribute = { ...defaults, ...attribute };
+    let normalized: Attribute = { ...defaults, ...attribute };
+    normalized = get(normalized.type).normalizeAttribute(normalized);
 
-    return attribute;
+    if (normalized.primary_key) {
+        normalized.allow_null = false;
+        normalized.refuse_update = true;
+        normalized.strict = true;
+    }
+
+    if (normalized.allow_null) {
+        normalized.default = null;
+    }
+
+    return normalized;
 }
 
 let types = new Map<string, TypeInterface>();

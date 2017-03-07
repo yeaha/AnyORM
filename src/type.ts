@@ -1,23 +1,26 @@
 import * as _ from 'lodash';
+import { UnexpectPropertyValueError } from "./error";
 
-export interface AttributeOptions {
+export interface AttributeOption {
     type: string;
-    primary_key?: boolean;
+    primaryKey?: boolean;
     default?: any;
-    allow_null?: boolean;
-    refuse_update?: boolean;
+    allowNull?: boolean;
+    refuseUpdate?: boolean;
     protected?: boolean;
     strict?: boolean;
+    regexp?: RegExp | null;
     [propName: string]: any;
 }
 
-export interface Attribute extends AttributeOptions {
-    primary_key: boolean;
+export interface Attribute extends AttributeOption {
+    primaryKey: boolean;
     default: any;
-    allow_null: boolean;
-    refuse_update: boolean;
+    allowNull: boolean;
+    refuseUpdate: boolean;
     protected: boolean;
     strict: boolean;
+    regexp: RegExp | null;
 }
 
 export interface TypeInterface {
@@ -31,27 +34,29 @@ export interface TypeInterface {
     isNull(value): boolean;
 }
 
-export function normalizeAttribute(attribute: AttributeOptions): Attribute {
+export function normalizeAttribute(attribute: AttributeOption): Attribute {
     const defaults: Attribute = {
         type: 'any',
-        primary_key: false,
+        primaryKey: false,
         default: null,
-        allow_null: false,
-        refuse_update: false,
+        allowNull: false,
+        refuseUpdate: false,
         protected: false,
         strict: false,
+        regexp: null,
     };
 
     let normalized: Attribute = { ...defaults, ...attribute };
     normalized = get(normalized.type).normalizeAttribute(normalized);
 
-    if (normalized.primary_key) {
-        normalized.allow_null = false;
-        normalized.refuse_update = true;
+    if (normalized.primaryKey) {
+        normalized.allowNull = false;
+        normalized.protected = true;
+        normalized.refuseUpdate = true;
         normalized.strict = true;
     }
 
-    if (normalized.allow_null) {
+    if (normalized.allowNull) {
         normalized.default = null;
     }
 
@@ -81,12 +86,12 @@ export class Any implements TypeInterface {
         return value;
     }
 
-    store(value, attribute: Attribute): string | null {
-        return this.isNull(value) ? null : _.toString(value);
+    store(value, attribute: Attribute) {
+        return this.isNull(value) ? null : value;
     }
 
     retrieve(value, attribute: Attribute) {
-        return this.normalize(value, attribute);
+        return this.isNull(value) ? null : this.normalize(value, attribute);
     }
 
     getDefaultValue(attribute: Attribute) {
@@ -102,13 +107,19 @@ export class Any implements TypeInterface {
     }
 
     isNull(value): boolean {
-        return _.isEmpty(value);
+        return value === '' || value === null || value === undefined;
     }
 }
 
 export class Numeric extends Any {
     normalize(value, attribute: Attribute): number {
         value = _.toNumber(value);
+
+        if (value === Infinity) {
+            throw new UnexpectPropertyValueError("Infinity number");
+        } else if (_.isNaN(value)) {
+            throw new UnexpectPropertyValueError("Not a number");
+        }
 
         return value;
     }
@@ -123,12 +134,32 @@ export class Integer extends Numeric {
 }
 
 export class Text extends Any {
+    normalizeAttribute(attribute: Attribute): Attribute {
+        return _.defaults({
+            trimSpace: false,
+        }, attribute);
+    }
+
     normalize(value, attribute: Attribute): string {
-        return _.toString(value);
+        value = _.toString(value);
+
+        if (attribute.trimSpace) {
+            value = _.trim(value)
+        }
+
+        return value;
+    }
+
+    store(value, attribute: Attribute): string | null {
+        return this.isNull(value) ? null : _.toString(value);
+    }
+
+    retrieve(value, attribute: Attribute): string {
+        return this.isNull(value) ? '' : value;
     }
 }
 
 register('any', new Any());
-register('number', new Numeric());
+register('numeric', new Numeric());
 register('integer', new Integer());
 register('text', new Text());

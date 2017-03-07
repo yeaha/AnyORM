@@ -1,12 +1,13 @@
 let gulp = require('gulp');
 let ts = require('gulp-typescript');
-let tsProject = ts.createProject('tsconfig.json');
 
 gulp.task('watch', () => {
-    gulp.watch('src/**/*.ts', ['compile']);
+    gulp.watch(['src/**/*.ts', 'tests/**/*.ts'], ['compile']);
 });
 
 gulp.task('compile', () => {
+    let tsProject = ts.createProject('tsconfig.json');
+
     return tsProject.src()
         .pipe(tsProject())
         .js.pipe(gulp.dest('built'));

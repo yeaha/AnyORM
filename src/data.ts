@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import { Mapper, MapperConstructor, AttributesOption } from "./mapper";
+import { Mapper, AttributesOption } from "./mapper";
 import { UndefinedPropertyError } from "./error";
 
 interface DataValues {
@@ -13,7 +13,7 @@ interface DataMapperOption {
     [key: string]: any;
 }
 
-function getMapperOf(target: Data | typeof Data): Mapper {
+export function getMapperOf(target: Data | typeof Data): Mapper {
     let constructor: typeof Data;
 
     if (target instanceof Data) {
@@ -39,7 +39,7 @@ function getMapperOf(target: Data | typeof Data): Mapper {
 }
 
 export abstract class Data {
-    static mapper: Mapper | MapperConstructor;
+    static mapper: Mapper | typeof Mapper;
 
     static mapperOption: DataMapperOption;
 
@@ -49,12 +49,14 @@ export abstract class Data {
 
     protected values: DataValues = {};
 
-    protected stage: { fresh: boolean, values: DataValues };
+    protected staged: { fresh: boolean, values: DataValues };
 
-    constructor(values: DataValues) {
+    constructor(values?: DataValues) {
         this.snapshoot();
 
-        this.values = values;
+        if (values !== undefined) {
+            this.values = values;
+        }
     }
 
     isFresh(): boolean {
@@ -62,25 +64,25 @@ export abstract class Data {
     }
 
     isDirty(): boolean {
-        return !_.isEqual(this.values, this.stage.values);
+        return !_.isEqual(this.values, this.staged.values);
     }
 
     rollback(): this {
-        this.values = _.cloneDeep(this.stage.values)
-        this.fresh = this.stage.fresh;
+        this.values = _.cloneDeep(this.staged.values)
+        this.fresh = this.staged.fresh;
 
         return this;
     }
 
     snapshoot(): this {
-        this.stage.fresh = this.fresh;
-        this.stage.values = _.cloneDeep(this.values);
+        this.staged.fresh = this.fresh;
+        this.staged.values = _.cloneDeep(this.values);
 
         return this;
     }
 
     has(key: string): boolean {
-        const mapper = this.getMapper();
+        const mapper = getMapperOf(this);
 
         return mapper.hasAttribute(key);
     }
@@ -90,7 +92,7 @@ export abstract class Data {
             throw new UndefinedPropertyError(`Undefined property ${key}`);
         }
 
-        const mapper = this.getMapper();
+        const mapper = getMapperOf(this);
         const attribute = mapper.getAttribute(key);
         const type = mapper.getTypeOf(attribute.type);
 
@@ -104,7 +106,7 @@ export abstract class Data {
     }
 
     set(key: string, value): this {
-        const mapper = this.getMapper();
+        const mapper = getMapperOf(this);
         const attribute = mapper.getAttribute(key);
         const type = mapper.getTypeOf(attribute.type);
 
@@ -133,16 +135,12 @@ export abstract class Data {
         return this;
     }
 
-    getMapper(): Mapper {
-        return getMapperOf(this);
-    }
-
     async save() {
-        return await this.getMapper().save(this);
+        return await getMapperOf(this).save(this);
     }
 
     async destroy() {
-        return await this.getMapper().destroy(this);
+        return await getMapperOf(this).destroy(this);
     }
 
     static async find(id): Promise<Data | null> {

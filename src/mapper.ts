@@ -19,10 +19,8 @@ interface MapperOption {
     [key: string]: any;
 }
 
-export type MapperConstructor = new (options: MapperOption) => Mapper;
-
 interface Record {
-    [key: string]: string | number | null;
+    [key: string]: any;
 }
 
 export interface DataID {

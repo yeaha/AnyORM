@@ -1,21 +1,54 @@
 import * as _ from "lodash";
-import { AttributeOption } from "./type";
-import { Mapper } from "./mapper";
+import { Mapper, MapperConstructor, AttributesOption } from "./mapper";
 import { UndefinedPropertyError } from "./error";
 
 interface DataValues {
-    [propName: string]: any;
+    [key: string]: any;
+}
+
+interface DataMapperOption {
+    service: string;
+    collection: string;
+    readonly?: boolean;
+    [key: string]: any;
+}
+
+function getMapperOf(target: Data | typeof Data): Mapper {
+    let constructor: typeof Data;
+
+    if (target instanceof Data) {
+        constructor = Object.getPrototypeOf(target).constructor;
+    } else {
+        constructor = target;
+    }
+
+    let mapper = constructor.mapper;
+
+    if (mapper === undefined) {
+        throw new Error('MapperConstructor is undefined');
+    }
+
+    if (mapper instanceof Mapper) {
+        return mapper;
+    }
+
+    let mapperOption = constructor.mapperOption;
+    mapperOption.attributes = constructor.attributes;
+
+    return constructor.mapper = Reflect.construct(mapper, [mapperOption]);
 }
 
 export abstract class Data {
-    protected abstract getMapper(): Mapper;
+    static mapper: Mapper | MapperConstructor;
 
-    static service: string;
-    static collection: string;
-    static attributes: AttributeOption;
+    static mapperOption: DataMapperOption;
+
+    static attributes: AttributesOption;
 
     protected fresh: boolean = true;
+
     protected values: DataValues = {};
+
     protected stage: { fresh: boolean, values: DataValues };
 
     constructor(values: DataValues) {
@@ -32,14 +65,14 @@ export abstract class Data {
         return !_.isEqual(this.values, this.stage.values);
     }
 
-    rollback(): Data {
+    rollback(): this {
         this.values = _.cloneDeep(this.stage.values)
         this.fresh = this.stage.fresh;
 
         return this;
     }
 
-    snapshoot(): Data {
+    snapshoot(): this {
         this.stage.fresh = this.fresh;
         this.stage.values = _.cloneDeep(this.values);
 
@@ -70,7 +103,7 @@ export abstract class Data {
         return type.clone(value);
     }
 
-    set(key: string, value): Data {
+    set(key: string, value): this {
         const mapper = this.getMapper();
         const attribute = mapper.getAttribute(key);
         const type = mapper.getTypeOf(attribute.type);
@@ -84,7 +117,7 @@ export abstract class Data {
         return this;
     }
 
-    merge(values: DataValues): Data {
+    merge(values: DataValues): this {
         _.each(values, (value, key: string) => {
             try {
                 this.set(key, value);
@@ -100,11 +133,19 @@ export abstract class Data {
         return this;
     }
 
+    getMapper(): Mapper {
+        return getMapperOf(this);
+    }
+
     async save() {
         return await this.getMapper().save(this);
     }
 
     async destroy() {
         return await this.getMapper().destroy(this);
+    }
+
+    static async find(id): Promise<Data | null> {
+        return await getMapperOf(this).find(id);
     }
 }

@@ -4,23 +4,25 @@ import { Data } from "./data";
 import { UndefinedPropertyError } from "./error";
 
 interface Attributes {
-    [propName: string]: Attribute;
+    [key: string]: Attribute;
 }
 
-interface AttributesOption {
+export interface AttributesOption {
     [propName: string]: AttributeOption;
 }
 
-interface MapperOptions {
+interface MapperOption {
     attributes: AttributesOption;
     service: string;
     collection: string;
     readonly?: boolean;
-    [propName: string]: any;
+    [key: string]: any;
 }
 
+export type MapperConstructor = new (options: MapperOption) => Mapper;
+
 interface Record {
-    [propName: string]: string | number | null;
+    [key: string]: string | number | null;
 }
 
 export interface DataID {
@@ -40,7 +42,7 @@ export abstract class Mapper {
     protected primaryKeys: Array<string>;
     protected options: object;
 
-    constructor(options: MapperOptions) {
+    constructor(options: MapperOption) {
         this.service = options.service;
         this.collection = options.service;
 

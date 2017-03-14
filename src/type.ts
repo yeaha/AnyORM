@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { UnexpectPropertyValueError } from "./error";
 
 export interface AttributeOptions {
@@ -37,7 +37,7 @@ export interface TypeInterface {
 
 export function normalizeAttribute(attribute: AttributeOptions): Attribute {
     const defaults: Attribute = {
-        type: 'any',
+        type: "any",
         primary: false,
         default: null,
         nullable: false,
@@ -72,48 +72,48 @@ export function register(name: string, type: TypeInterface) {
 
 export function get(name: string): TypeInterface {
     if (!types.has(name)) {
-        name = 'any';
+        name = "any";
     }
 
     return types.get(name) as TypeInterface;
 }
 
 export class Any implements TypeInterface {
-    normalizeAttribute(attribute: Attribute): Attribute {
+    public normalizeAttribute(attribute: Attribute): Attribute {
         return attribute;
     }
 
-    normalize(value, attribute: Attribute) {
+    public normalize(value, attribute: Attribute) {
         return value;
     }
 
-    store(value, attribute: Attribute) {
+    public store(value, attribute: Attribute) {
         return this.isNull(value) ? null : value;
     }
 
-    retrieve(value, attribute: Attribute) {
+    public retrieve(value, attribute: Attribute) {
         return this.isNull(value) ? null : this.normalize(value, attribute);
     }
 
-    getDefaultValue(attribute: Attribute) {
+    public getDefaultValue(attribute: Attribute) {
         return attribute.default;
     }
 
-    toJson(value, attribute: Attribute) {
+    public toJson(value, attribute: Attribute) {
         return value;
     }
 
-    clone(value) {
+    public clone(value) {
         return _.isObject(value) ? _.cloneDeep(value) : value;
     }
 
-    isNull(value): boolean {
-        return value === '' || value === null || value === undefined;
+    public isNull(value): boolean {
+        return value === "" || value === null || value === undefined;
     }
 }
 
 export class Numeric extends Any {
-    normalize(value, attribute: Attribute): number {
+    public normalize(value, attribute: Attribute): number {
         value = _.toNumber(value);
 
         if (value === Infinity) {
@@ -127,7 +127,7 @@ export class Numeric extends Any {
 }
 
 export class Integer extends Numeric {
-    normalize(value, attribute: Attribute): number {
+    public normalize(value, attribute: Attribute): number {
         value = super.normalize(value, attribute);
 
         return _.toInteger(value);
@@ -135,32 +135,32 @@ export class Integer extends Numeric {
 }
 
 export class Text extends Any {
-    normalizeAttribute(attribute: Attribute): Attribute {
+    public normalizeAttribute(attribute: Attribute): Attribute {
         return _.defaults({
             trimSpace: false,
         }, attribute);
     }
 
-    normalize(value, attribute: Attribute): string {
+    public normalize(value, attribute: Attribute): string {
         value = _.toString(value);
 
         if (attribute.trimSpace) {
-            value = _.trim(value)
+            value = _.trim(value);
         }
 
         return value;
     }
 
-    store(value, attribute: Attribute): string | null {
+    public store(value, attribute: Attribute): string | null {
         return this.isNull(value) ? null : _.toString(value);
     }
 
-    retrieve(value, attribute: Attribute): string {
-        return this.isNull(value) ? '' : value;
+    public retrieve(value, attribute: Attribute): string {
+        return this.isNull(value) ? "" : value;
     }
 }
 
-register('any', new Any());
-register('numeric', new Numeric());
-register('integer', new Integer());
-register('text', new Text());
+register("any", new Any());
+register("numeric", new Numeric());
+register("integer", new Integer());
+register("text", new Text());

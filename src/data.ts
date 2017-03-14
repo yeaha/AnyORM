@@ -1,7 +1,7 @@
-import * as Type from "./type";
 import * as _ from "lodash";
-import { Mapper, Attributes } from "./mapper";
 import { UndefinedPropertyError } from "./error";
+import { Attributes, Mapper } from "./mapper";
+import * as Type from "./type";
 
 interface Values {
     [key: string]: any;
@@ -26,7 +26,7 @@ export function getMapperOf(target: Data | typeof Data): Mapper {
     let mapper = constructor.mapper;
 
     if (mapper === undefined) {
-        throw new Error('MapperConstructor is undefined');
+        throw new Error(`MapperConstructor is undefined`);
     }
 
     if (mapper instanceof Mapper) {
@@ -44,7 +44,7 @@ export function getMapperOf(target: Data | typeof Data): Mapper {
 
 // Data property decorator
 export function Column(type: string, attribute?: Type.AttributeOptions) {
-    return function (target: Data, propertyKey: string) {
+    return (target: Data, propertyKey: string) => {
         let constructor: Function = Object.getPrototypeOf(target).constructor;
 
         if (constructor["attributes"] === undefined) {
@@ -54,7 +54,7 @@ export function Column(type: string, attribute?: Type.AttributeOptions) {
         if (attribute === undefined) {
             attribute = { type: type };
         } else {
-            attribute["type"] = type;
+            attribute.type = type;
         }
 
         attribute = Type.normalizeAttribute(attribute);
@@ -64,11 +64,15 @@ export function Column(type: string, attribute?: Type.AttributeOptions) {
 }
 
 export abstract class Data {
-    static mapper: Mapper | typeof Mapper;
+    public static mapper: Mapper | typeof Mapper;
 
-    static mapperOptions: MapperOptions = { service: '', collection: '' };
+    public static mapperOptions: MapperOptions = { service: "", collection: "" };
 
-    static attributes: Attributes = new Map<string, Type.Attribute>();
+    public static attributes: Attributes = new Map<string, Type.Attribute>();
+
+    public static async find(id): Promise<Data | null> {
+        return await getMapperOf(this).find(id);
+    }
 
     protected current: { fresh: boolean, data: Values } = { fresh: true, data: {} };
 
@@ -89,36 +93,36 @@ export abstract class Data {
                 },
                 set: (val) => {
                     return this.set(key, val);
-                }
+                },
             });
         });
     }
 
-    isFresh(): boolean {
+    public isFresh(): boolean {
         return this.current.fresh;
     }
 
-    isDirty(): boolean {
+    public isDirty(): boolean {
         return !_.isEqual(this.current.data, this.staged.data);
     }
 
-    snapshoot(): this {
+    public snapshoot(): this {
         this.staged = _.cloneDeep(this.current);
 
         return this;
     }
 
-    rollback(): this {
+    public rollback(): this {
         this.current = _.cloneDeep(this.staged);
 
         return this;
     }
 
-    has(key: string): boolean {
+    public has(key: string): boolean {
         return getMapperOf(this).hasAttribute(key);
     }
 
-    get(key: string) {
+    public get(key: string) {
         if (!this.has(key)) {
             throw new UndefinedPropertyError(`Undefined property ${key}`);
         }
@@ -136,7 +140,7 @@ export abstract class Data {
         return type.clone(value);
     }
 
-    set(key: string, value): this {
+    public set(key: string, value): this {
         const mapper = getMapperOf(this);
         const attribute = mapper.getAttribute(key);
         const type = Type.get(attribute.type);
@@ -150,7 +154,7 @@ export abstract class Data {
         return this;
     }
 
-    merge(values: Values): this {
+    public merge(values: Values): this {
         _.each(values, (value, key: string) => {
             try {
                 this.set(key, value);
@@ -166,15 +170,11 @@ export abstract class Data {
         return this;
     }
 
-    async save() {
+    public async save() {
         return await getMapperOf(this).save(this);
     }
 
-    async destroy() {
+    public async destroy() {
         return await getMapperOf(this).destroy(this);
-    }
-
-    static async find(id): Promise<Data | null> {
-        return await getMapperOf(this).find(id);
     }
 }

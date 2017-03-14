@@ -4,11 +4,11 @@ import * as assert from "assert";
 
 describe("Normalize Attribute", () => {
     it("default", () => {
-        let attribute: Type.AttributeOption = { type: 'foobar' };
+        let attribute: Type.AttributeOptions = { type: 'foobar' };
         attribute = Type.normalizeAttribute(attribute);
 
-        assert.strictEqual(attribute.allowNull, false);
-        assert.strictEqual(attribute.primaryKey, false);
+        assert.strictEqual(attribute.nullable, false);
+        assert.strictEqual(attribute.primary, false);
         assert.strictEqual(attribute.default, null);
         assert.strictEqual(attribute.protected, false);
         assert.strictEqual(attribute.strict, false);
@@ -16,7 +16,7 @@ describe("Normalize Attribute", () => {
     });
 
     it('primary key', () => {
-        let attribute: Type.AttributeOption = { type: 'any', primaryKey: true };
+        let attribute: Type.AttributeOptions = { type: 'any', primary: true };
         attribute = Type.normalizeAttribute(attribute);
 
         assert.strictEqual(attribute.protected, true);

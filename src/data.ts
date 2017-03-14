@@ -1,12 +1,13 @@
+import * as Type from "./type";
 import * as _ from "lodash";
-import { Mapper, AttributesOption } from "./mapper";
+import { Mapper, Attributes } from "./mapper";
 import { UndefinedPropertyError } from "./error";
 
-interface DataValues {
+interface Values {
     [key: string]: any;
 }
 
-interface DataMapperOption {
+interface MapperOptions {
     service: string;
     collection: string;
     readonly?: boolean;
@@ -32,59 +33,89 @@ export function getMapperOf(target: Data | typeof Data): Mapper {
         return mapper;
     }
 
-    let mapperOption = constructor.mapperOption;
-    mapperOption.attributes = constructor.attributes;
+    let mapperOptions = constructor.mapperOptions;
+    let service = mapperOptions.service;
+    let collection = mapperOptions.collection;
+    delete mapperOptions.service;
+    delete mapperOptions.collection;
 
-    return constructor.mapper = Reflect.construct(mapper, [mapperOption]);
+    return constructor.mapper = Reflect.construct(mapper, [service, collection, constructor.attributes, mapperOptions]);
+}
+
+// Data property decorator
+export function Column(type: string, attribute?: Type.AttributeOptions) {
+    return function (target: Data, propertyKey: string) {
+        let constructor: Function = Object.getPrototypeOf(target).constructor;
+
+        if (constructor["attributes"] === undefined) {
+            constructor["attributes"] = new Map<string, Type.Attribute>();
+        }
+
+        if (attribute === undefined) {
+            attribute = { type: type };
+        } else {
+            attribute["type"] = type;
+        }
+
+        attribute = Type.normalizeAttribute(attribute);
+
+        constructor["attributes"].set(propertyKey, attribute);
+    };
 }
 
 export abstract class Data {
     static mapper: Mapper | typeof Mapper;
 
-    static mapperOption: DataMapperOption;
+    static mapperOptions: MapperOptions = { service: '', collection: '' };
 
-    static attributes: AttributesOption;
+    static attributes: Attributes = new Map<string, Type.Attribute>();
 
-    protected fresh: boolean = true;
+    protected current: { fresh: boolean, data: Values } = { fresh: true, data: {} };
 
-    protected values: DataValues = {};
+    protected staged: { fresh: boolean, data: Values };
 
-    protected staged: { fresh: boolean, values: DataValues };
-
-    constructor(values?: DataValues) {
+    constructor(values?: Values) {
         this.snapshoot();
 
         if (values !== undefined) {
-            this.values = values;
+            this.current.data = values;
         }
+
+        let mapper = getMapperOf(this);
+        mapper.getAttributes().forEach((attribute, key) => {
+            Object.defineProperty(this, key, {
+                get: () => {
+                    return this.get(key);
+                },
+                set: (val) => {
+                    return this.set(key, val);
+                }
+            });
+        });
     }
 
     isFresh(): boolean {
-        return this.fresh;
+        return this.current.fresh;
     }
 
     isDirty(): boolean {
-        return !_.isEqual(this.values, this.staged.values);
+        return !_.isEqual(this.current.data, this.staged.data);
     }
 
-    rollback(): this {
-        this.values = _.cloneDeep(this.staged.values)
-        this.fresh = this.staged.fresh;
+    snapshoot(): this {
+        this.staged = _.cloneDeep(this.current);
 
         return this;
     }
 
-    snapshoot(): this {
-        this.staged.fresh = this.fresh;
-        this.staged.values = _.cloneDeep(this.values);
+    rollback(): this {
+        this.current = _.cloneDeep(this.staged);
 
         return this;
     }
 
     has(key: string): boolean {
-        const mapper = getMapperOf(this);
-
-        return mapper.hasAttribute(key);
+        return getMapperOf(this).hasAttribute(key);
     }
 
     get(key: string) {
@@ -94,13 +125,13 @@ export abstract class Data {
 
         const mapper = getMapperOf(this);
         const attribute = mapper.getAttribute(key);
-        const type = mapper.getTypeOf(attribute.type);
+        const type = Type.get(attribute.type);
 
-        if (!this.values.hasOwnProperty(key)) {
+        if (!this.current.hasOwnProperty(key)) {
             return type.getDefaultValue(attribute);
         }
 
-        const value = this.values[key];
+        const value = this.current.data[key];
 
         return type.clone(value);
     }
@@ -108,18 +139,18 @@ export abstract class Data {
     set(key: string, value): this {
         const mapper = getMapperOf(this);
         const attribute = mapper.getAttribute(key);
-        const type = mapper.getTypeOf(attribute.type);
+        const type = Type.get(attribute.type);
 
         if (!type.isNull(value)) {
             value = type.normalize(value, attribute);
         }
 
-        this.values[key] = value;
+        this.current.data[key] = value;
 
         return this;
     }
 
-    merge(values: DataValues): this {
+    merge(values: Values): this {
         _.each(values, (value, key: string) => {
             try {
                 this.set(key, value);

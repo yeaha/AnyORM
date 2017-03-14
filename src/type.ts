@@ -1,11 +1,11 @@
 import * as _ from 'lodash';
 import { UnexpectPropertyValueError } from "./error";
 
-export interface AttributeOption {
-    type: string;
-    primaryKey?: boolean;
+export interface AttributeOptions {
+    type?: string;
+    primary?: boolean;
     default?: any;
-    allowNull?: boolean;
+    nullable?: boolean;
     refuseUpdate?: boolean;
     protected?: boolean;
     strict?: boolean;
@@ -13,10 +13,11 @@ export interface AttributeOption {
     [propName: string]: any;
 }
 
-export interface Attribute extends AttributeOption {
-    primaryKey: boolean;
+export interface Attribute extends AttributeOptions {
+    type: string;
+    primary: boolean;
     default: any;
-    allowNull: boolean;
+    nullable: boolean;
     refuseUpdate: boolean;
     protected: boolean;
     strict: boolean;
@@ -34,12 +35,12 @@ export interface TypeInterface {
     isNull(value): boolean;
 }
 
-export function normalizeAttribute(attribute: AttributeOption): Attribute {
+export function normalizeAttribute(attribute: AttributeOptions): Attribute {
     const defaults: Attribute = {
         type: 'any',
-        primaryKey: false,
+        primary: false,
         default: null,
-        allowNull: false,
+        nullable: false,
         refuseUpdate: false,
         protected: false,
         strict: false,
@@ -49,14 +50,14 @@ export function normalizeAttribute(attribute: AttributeOption): Attribute {
     let normalized: Attribute = { ...defaults, ...attribute };
     normalized = get(normalized.type).normalizeAttribute(normalized);
 
-    if (normalized.primaryKey) {
-        normalized.allowNull = false;
+    if (normalized.primary) {
+        normalized.nullable = false;
         normalized.protected = true;
         normalized.refuseUpdate = true;
         normalized.strict = true;
     }
 
-    if (normalized.allowNull) {
+    if (normalized.nullable) {
         normalized.default = null;
     }
 

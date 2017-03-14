@@ -1,66 +1,38 @@
-import * as _ from "lodash";
-import { Attribute, AttributeOption, normalizeAttribute, get as getType, TypeInterface } from "./type";
+import { Attribute } from "./type";
 import { Data } from "./data";
 import { UndefinedPropertyError } from "./error";
 
-interface Attributes {
-    [key: string]: Attribute;
-}
+export type Attributes = Map<string, Attribute>;
 
-export interface AttributesOption {
-    [propName: string]: AttributeOption;
-}
-
-interface MapperOption {
-    attributes: AttributesOption;
-    service: string;
-    collection: string;
+interface MapperOptions {
     readonly?: boolean;
+    strict?: boolean;
     [key: string]: any;
-}
-
-interface Record {
-    [key: string]: any;
-}
-
-export interface DataID {
-    [index: string]: any;
 }
 
 export abstract class Mapper {
-    protected abstract getService(id?: DataID);
-    protected abstract async doFind(id: DataID, service?: object, collection?: string): Promise<Record>;
-    protected abstract async doInsert(data: Data, service?: object, collection?: string): Promise<Record>;
-    protected abstract async doUpdate(data: Data, service?: object, collection?: string): Promise<Record>;
+    protected abstract getService(id?: object);
+    protected abstract async doFind(id: object, service?: object, collection?: string): Promise<object>;
+    protected abstract async doInsert(data: Data, service?: object, collection?: string): Promise<object>;
+    protected abstract async doUpdate(data: Data, service?: object, collection?: string): Promise<object>;
     protected abstract async doDelete(data: Data, service?: object, collection?: string): Promise<boolean>;
 
     protected attributes: Attributes;
     protected service: string;
     protected collection: string;
-    protected primaryKeys: Array<string>;
-    protected options: object;
+    protected primaryKeys: Set<string> = new Set<string>();
+    protected options: MapperOptions;
 
-    constructor(options: MapperOption) {
-        this.service = options.service;
-        this.collection = options.service;
-
-        _.forEach(options.attributes, (attribute, key: string) => {
-            attribute = normalizeAttribute(attribute);
-
-            this.attributes[key] = <Attribute>attribute;
-
-            if (attribute.primary_key) {
-                this.primaryKeys.push(key);
-            }
-        });
-
-        delete options.service;
-        delete options.collection;
-        delete options.attributes;
-
+    constructor(service: string, collection: string, attributes: Attributes, options: MapperOptions = { readonly: false, strict: false }) {
+        this.service = service;
+        this.collection = collection;
+        this.attributes = attributes;
         this.options = options;
-    }
 
+        attributes.forEach((attribute, key) => {
+            attribute.primary && this.primaryKeys.add(key);
+        });
+    }
 
     isReadonly(): boolean {
         return this.getOption('readonly');
@@ -82,14 +54,12 @@ export abstract class Mapper {
         return this.options[key];
     }
 
-    getCollection(id?: DataID): string {
+    getCollection(id?: object): string {
         return this.getOption('collection');
     }
 
     hasAttribute(key: string): boolean {
-        let attributes = this.attributes;
-
-        return attributes.hasOwnProperty(key);
+        return this.attributes.has(key);
     }
 
     getAttributes(): Attributes {
@@ -101,11 +71,7 @@ export abstract class Mapper {
             throw new UndefinedPropertyError('Undefined property: ' + key);
         }
 
-        return this.attributes[key];
-    }
-
-    getTypeOf(key: string): TypeInterface {
-        return getType(key);
+        return <Attribute>this.attributes.get(key);
     }
 
     async find(id): Promise<Data | null> {

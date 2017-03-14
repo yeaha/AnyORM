@@ -74,28 +74,15 @@ export abstract class Data {
         return await getMapperOf(this).find(id);
     }
 
-    protected current: { fresh: boolean, data: Values } = { fresh: true, data: {} };
+    protected current: { fresh: boolean, values: Values } = { fresh: true, values: {} };
 
-    protected staged: { fresh: boolean, data: Values };
+    protected staged: { fresh: boolean, values: Values };
 
-    constructor(values?: Values) {
+    constructor(values: Values = {}) {
+        this.initializeProperties();
         this.snapshoot();
 
-        if (values !== undefined) {
-            this.current.data = values;
-        }
-
-        let mapper = getMapperOf(this);
-        mapper.getAttributes().forEach((attribute, key) => {
-            Object.defineProperty(this, key, {
-                get: () => {
-                    return this.get(key);
-                },
-                set: (val) => {
-                    return this.set(key, val);
-                },
-            });
-        });
+        this.current.values = values;
     }
 
     public isFresh(): boolean {
@@ -103,13 +90,7 @@ export abstract class Data {
     }
 
     public isDirty(): boolean {
-        return !_.isEqual(this.current.data, this.staged.data);
-    }
-
-    public snapshoot(): this {
-        this.staged = _.cloneDeep(this.current);
-
-        return this;
+        return !_.isEqual(this.current.values, this.staged.values);
     }
 
     public rollback(): this {
@@ -135,7 +116,7 @@ export abstract class Data {
             return type.getDefaultValue(attribute);
         }
 
-        const value = this.current.data[key];
+        const value = this.current.values[key];
 
         return type.clone(value);
     }
@@ -149,7 +130,7 @@ export abstract class Data {
             value = type.normalize(value, attribute);
         }
 
-        this.current.data[key] = value;
+        this.current.values[key] = value;
 
         return this;
     }
@@ -176,5 +157,25 @@ export abstract class Data {
 
     public async destroy() {
         return await getMapperOf(this).destroy(this);
+    }
+
+    private snapshoot(): this {
+        this.staged = _.cloneDeep(this.current);
+
+        return this;
+    }
+
+    private initializeProperties() {
+        let mapper = getMapperOf(this);
+        mapper.getAttributes().forEach((attribute, key) => {
+            Object.defineProperty(this, key, {
+                get: () => {
+                    return this.get(key);
+                },
+                set: (val) => {
+                    return this.set(key, val);
+                },
+            });
+        });
     }
 }

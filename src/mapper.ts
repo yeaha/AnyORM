@@ -17,24 +17,22 @@ export abstract class Mapper {
     protected primaryKeys: Set<string> = new Set<string>();
     protected options: MapperOptions;
 
-    constructor(
-        service: string,
-        collection: string,
-        attributes: Attributes,
-        options: MapperOptions = {
-            readonly: false,
-            strict: false,
-        }) {
+    constructor(service: string, collection: string, attributes: Attributes, options?: MapperOptions) {
         this.service = service;
         this.collection = collection;
-        this.attributes = attributes;
-        this.options = options;
 
-        attributes.forEach((attribute, key) => {
-            if (attribute.primary) {
-                this.primaryKeys.add(key);
-            }
-        });
+        let defaults = {
+            readonly: false,
+            strict: false,
+        };
+
+        if (options === undefined) {
+            this.options = defaults;
+        } else {
+            this.options = { ...defaults, ...options };
+        }
+
+        this.setAttributes(attributes);
     }
 
     public isReadonly(): boolean {
@@ -58,7 +56,23 @@ export abstract class Mapper {
     }
 
     public getCollection(id?: object): string {
-        return this.getOption("collection");
+        return this.collection;
+    }
+
+    public getPrimaryKeys(): Set<string> {
+        return this.primaryKeys;
+    }
+
+    public setAttributes(attributes: Attributes): this {
+        this.attributes = attributes;
+
+        attributes.forEach((attribute, key) => {
+            if (attribute.primary) {
+                this.primaryKeys.add(key);
+            }
+        });
+
+        return this;
     }
 
     public hasAttribute(key: string): boolean {

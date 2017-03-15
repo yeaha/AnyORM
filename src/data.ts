@@ -47,10 +47,6 @@ export function Column(type: string, attribute?: Type.AttributeOptions) {
     return (target: Data, propertyKey: string) => {
         let constructor: Function = Object.getPrototypeOf(target).constructor;
 
-        if (constructor["attributes"] === undefined) {
-            constructor["attributes"] = new Map<string, Type.Attribute>();
-        }
-
         if (attribute === undefined) {
             attribute = { type: type };
         } else {

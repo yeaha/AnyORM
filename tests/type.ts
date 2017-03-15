@@ -1,72 +1,65 @@
-import * as Type from "../src/type";
+import test from "ava";
 import { UnexpectPropertyValueError } from "../src/error";
-import * as assert from "assert";
+import * as Type from "../src/type";
 
-describe("Normalize Attribute", () => {
-    it("default", () => {
-        let attribute: Type.AttributeOptions = { type: 'foobar' };
-        attribute = Type.normalizeAttribute(attribute);
+test("normalize attribute", (t) => {
+    let attribute: Type.AttributeOptions = { type: "foobar" };
+    attribute = Type.normalizeAttribute(attribute);
 
-        assert.strictEqual(attribute.nullable, false);
-        assert.strictEqual(attribute.primary, false);
-        assert.strictEqual(attribute.default, null);
-        assert.strictEqual(attribute.protected, false);
-        assert.strictEqual(attribute.strict, false);
-        assert.strictEqual(attribute.refuseUpdate, false);
-    });
-
-    it('primary key', () => {
-        let attribute: Type.AttributeOptions = { type: 'any', primary: true };
-        attribute = Type.normalizeAttribute(attribute);
-
-        assert.strictEqual(attribute.protected, true);
-        assert.strictEqual(attribute.strict, true);
-        assert.strictEqual(attribute.refuseUpdate, true);
-    });
+    t.is(attribute.nullable, false);
+    t.is(attribute.primary, false);
+    t.is(attribute.default, null);
+    t.is(attribute.protected, false);
+    t.is(attribute.strict, false);
+    t.is(attribute.refuseUpdate, false);
 });
 
-describe("Get Type", () => {
-    it("default", () => {
-        assert.ok(Type.get('foobar') instanceof Type.Any);
-        assert.ok(Type.get('numeric') instanceof Type.Numeric);
-        assert.ok(Type.get('integer') instanceof Type.Integer);
-        assert.ok(Type.get('text') instanceof Type.Text);
-    });
+test("normalize primary attribute", (t) => {
+    let attribute: Type.AttributeOptions = { primary: true };
+    attribute = Type.normalizeAttribute(attribute);
+
+    t.is(attribute.protected, true);
+    t.is(attribute.strict, true);
+    t.is(attribute.refuseUpdate, true);
 });
 
-describe("Numeric Type", () => {
-    let attribute: Type.Attribute = Type.normalizeAttribute({ type: 'numeric' });
-    let type = Type.get('numeric');
+test("Type.get()", (t) => {
+    t.true(Type.get("foobar") instanceof Type.Any);
+    t.true(Type.get("numeric") instanceof Type.Numeric);
+    t.true(Type.get("integer") instanceof Type.Integer);
+    t.true(Type.get("text") instanceof Type.Text);
+});
 
-    it("normalize", () => {
-        assert.strictEqual(type.normalize(1.23, attribute), 1.23);
-        assert.strictEqual(type.normalize('1.10', attribute), 1.10);
+// Numeric type
+(() => {
+    let attribute: Type.Attribute = Type.normalizeAttribute({ type: "numeric" });
+    let type = Type.get("numeric");
+
+    test("Numeric.normalize()", (t) => {
+        t.is(type.normalize(1.23, attribute), 1.23);
+        t.is(type.normalize("1.10", attribute), 1.1);
     });
 
-    it("store", () => {
-        assert.strictEqual(type.store(1, attribute), 1);
-        assert.strictEqual(type.store(null, attribute), null);
-        assert.strictEqual(type.store('', attribute), null);
+    test("Numeric.store()", (t) => {
+        t.is(type.store(1, attribute), 1);
+        t.is(type.store(null, attribute), null);
+        t.is(type.store("", attribute), null);
     });
 
-    it("retrieve", () => {
-        assert.strictEqual(type.retrieve(1, attribute), 1);
-        assert.strictEqual(type.retrieve('0', attribute), 0);
-        assert.strictEqual(type.retrieve(null, attribute), null);
-        assert.strictEqual(type.retrieve("", attribute), null);
+    test("Numeric.retrieve()", (t) => {
+        t.is(type.retrieve(1, attribute), 1);
+        t.is(type.retrieve("0", attribute), 0);
+        t.is(type.retrieve(null, attribute), null);
+        t.is(type.retrieve("", attribute), null);
     });
 
-    it("normalize unexpect value", () => {
-        try {
+    test("Numeric.normalize() unexpect value", (t) => {
+        t.throws(() => {
             type.normalize(Infinity, attribute);
-        } catch (e) {
-            assert.ok(e instanceof UnexpectPropertyValueError);
-        }
+        }, UnexpectPropertyValueError);
 
-        try {
-            type.normalize('a', attribute);
-        } catch (e) {
-            assert.ok(e instanceof UnexpectPropertyValueError);
-        }
+        t.throws(() => {
+            type.normalize("a", attribute);
+        }, UnexpectPropertyValueError);
     });
-});
+})();

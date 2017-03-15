@@ -27,7 +27,7 @@ export interface Attribute extends AttributeOptions {
 export interface TypeInterface {
     normalizeAttribute(attribute: Attribute): Attribute;
     normalize(value, attribute: Attribute);
-    store(value, attribute: Attribute): string | null;
+    store(value, attribute: Attribute);
     retrieve(value, attribute: Attribute);
     getDefaultValue(attribute: Attribute);
     toJson(value, attribute: Attribute);

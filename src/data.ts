@@ -1,18 +1,8 @@
+import * as Immutable from "immutable";
 import * as _ from "lodash";
 import { UndefinedPropertyError } from "./error";
-import { Attributes, Mapper } from "./mapper";
+import { Attributes, Mapper, MapperOptions } from "./mapper";
 import * as Type from "./type";
-
-interface Values {
-    [key: string]: any;
-}
-
-interface MapperOptions {
-    service: string;
-    collection: string;
-    readonly?: boolean;
-    [key: string]: any;
-}
 
 export function getMapperOf(target: Data | typeof Data): Mapper {
     let constructor: typeof Data;
@@ -33,13 +23,11 @@ export function getMapperOf(target: Data | typeof Data): Mapper {
         return mapper;
     }
 
-    let mapperOptions = constructor.mapperOptions;
-    let service = mapperOptions.service;
-    let collection = mapperOptions.collection;
-    delete mapperOptions.service;
-    delete mapperOptions.collection;
+    let options = constructor.mapperOptions;
+    let service = constructor.mapperService;
+    let collection = constructor.mapperCollection;
 
-    return constructor.mapper = Reflect.construct(mapper, [service, collection, constructor.attributes, mapperOptions]);
+    return constructor.mapper = Reflect.construct(mapper, [service, collection, constructor.attributes, options]);
 }
 
 // Data property decorator
@@ -62,7 +50,11 @@ export function Column(type: string, attribute?: Type.AttributeOptions) {
 export abstract class Data {
     public static mapper: Mapper | typeof Mapper;
 
-    public static mapperOptions: MapperOptions = { service: "", collection: "" };
+    public static mapperService: string = "";
+
+    public static mapperCollection: string = "";
+
+    public static mapperOptions: MapperOptions = {};
 
     public static attributes: Attributes = new Map<string, Type.Attribute>();
 
@@ -70,15 +62,16 @@ export abstract class Data {
         return await getMapperOf(this).find(id);
     }
 
-    protected current: { fresh: boolean, values: Values } = { fresh: true, values: {} };
+    protected current: { fresh: boolean, values: Immutable.Map<string, any> };
 
-    protected staged: { fresh: boolean, values: Values };
+    protected staged: { fresh: boolean, values: Immutable.Map<string, any> };
 
-    constructor(values: Values = {}) {
+    constructor(values: object = {}) {
         this.initializeProperties();
         this.snapshoot();
 
-        this.current.values = values;
+        this.current.fresh = true;
+        this.current.values = Immutable.fromJS(values);
     }
 
     public isFresh(): boolean {
@@ -112,7 +105,7 @@ export abstract class Data {
             return type.getDefaultValue(attribute);
         }
 
-        const value = this.current.values[key];
+        const value = this.current.values.get(key);
 
         return type.clone(value);
     }
@@ -126,12 +119,12 @@ export abstract class Data {
             value = type.normalize(value, attribute);
         }
 
-        this.current.values[key] = value;
+        this.current.values = this.current.values.set(key, type.clone(value));
 
         return this;
     }
 
-    public merge(values: Values): this {
+    public merge(values: object): this {
         _.each(values, (value, key: string) => {
             try {
                 this.set(key, value);

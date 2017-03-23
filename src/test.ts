@@ -23,14 +23,14 @@ class Mapper extends Orm.Mapper {
 }
 
 class Data extends Orm.Data {
-    static mapper = Mapper;
-    static mapperOptions = {
-        service: 'test',
-        collection: 'test',
+    public static mapper = Mapper;
+    public static mapperOptions = {
+        service: "test",
+        collection: "test",
     };
 
-    @Orm.Column('integer', { primary: true })
-    id: number;
+    @Orm.Column("integer", { primary: true })
+    public id: number;
 }
 
 let data = new Data();
@@ -40,4 +40,4 @@ console.log(data.isFresh(), data.isDirty())
 data.id = 1;
 console.log(data);
 
-console.log(data.isFresh(), data.isDirty())
+console.log(data.isFresh(), data.isDirty());

@@ -4,7 +4,7 @@ import { Attribute } from "./type";
 
 export type Attributes = Map<string, Attribute>;
 
-interface MapperOptions {
+export interface MapperOptions {
     readonly?: boolean;
     strict?: boolean;
     [key: string]: any;

@@ -1,23 +1,23 @@
+import { ColumnInterface } from "./column";
 import { Data } from "./data";
 import { UndefinedPropertyError } from "./error";
-import { Attribute } from "./type";
 
-export type Attributes = Map<string, Attribute>;
+export type Columns = Map<string, ColumnInterface>;
 
 export interface MapperOptions {
-    readonly?: boolean;
-    strict?: boolean;
+    readonly: boolean;
+    strict: boolean;
     [key: string]: any;
 }
 
 export abstract class Mapper {
-    protected attributes: Attributes;
+    protected columns: Columns;
     protected service: string;
     protected collection: string;
-    protected primaryKeys: Set<string> = new Set<string>();
+    protected primaryKeys: Columns = new Map();
     protected options: MapperOptions;
 
-    constructor(service: string, collection: string, attributes: Attributes, options?: MapperOptions) {
+    constructor(service: string, collection: string, columns: Columns, options?: object | MapperOptions) {
         this.service = service;
         this.collection = collection;
 
@@ -29,10 +29,10 @@ export abstract class Mapper {
         if (options === undefined) {
             this.options = defaults;
         } else {
-            this.options = { ...defaults, ...options };
+            this.options = { ...defaults, ...options } as MapperOptions;
         }
 
-        this.setAttributes(attributes);
+        this.setColumns(columns);
     }
 
     public isReadonly(): boolean {
@@ -59,36 +59,44 @@ export abstract class Mapper {
         return this.collection;
     }
 
-    public getPrimaryKeys(): Set<string> {
+    public getPrimaryKeys(): Columns {
         return this.primaryKeys;
     }
 
-    public setAttributes(attributes: Attributes): this {
-        this.attributes = attributes;
+    public setColumns(columns: Columns): this {
+        this.columns = columns;
 
-        attributes.forEach((attribute, key) => {
-            if (attribute.primary) {
-                this.primaryKeys.add(key);
+        columns.forEach((column, key) => {
+            const options = column.getOptions();
+
+            if (options.primary) {
+                this.primaryKeys.set(key, column);
             }
         });
+
+        if (!this.primaryKeys.size) {
+            throw new Error();
+        }
 
         return this;
     }
 
-    public hasAttribute(key: string): boolean {
-        return this.attributes.has(key);
+    public hasColumn(key: string): boolean {
+        return this.columns.has(key);
     }
 
-    public getAttributes(): Attributes {
-        return this.attributes;
+    public getColumns(): Columns {
+        return this.columns;
     }
 
-    public getAttribute(key: string): Attribute {
-        if (!this.hasAttribute(key)) {
-            throw new UndefinedPropertyError(`Undefined property: ${key}`);
+    public getColumn(key: string): ColumnInterface {
+        const column = this.columns.get(key);
+
+        if (column === undefined) {
+            throw new UndefinedPropertyError(`Undefined column: ${key}`);
         }
 
-        return this.attributes.get(key) as Attribute;
+        return column;
     }
 
     public async find(id): Promise<Data | null> {

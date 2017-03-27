@@ -7,15 +7,15 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 }
 
 (() => {
-    let attributes: AnyORM.Attributes = new Map();
-    attributes.set("id", AnyORM.Type.normalizeAttribute({ type: "numeric", primary: true }));
+    let columns: AnyORM.Columns = new Map();
+    columns.set("id", AnyORM.ColumnFactory("numeric", { primary: true }));
 
-    let mapper = new Mapper("test.service", "test.collection", attributes, { foo: "FOO" });
+    let mapper = new Mapper("test.service", "test.collection", columns, { foo: "FOO" });
     test("Getter", (t) => {
         t.is(mapper.getService(), "test.service");
         t.is(mapper.getCollection(), "test.collection");
-        t.true(mapper.hasAttribute("id"));
-        t.false(mapper.hasAttribute("not_exist"));
+        t.true(mapper.hasColumn("id"));
+        t.false(mapper.hasColumn("not_exist"));
         t.is(mapper.getOption("foo"), "FOO");
 
         t.false(mapper.getOption("readonly"));

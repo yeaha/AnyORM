@@ -1,8 +1,8 @@
 import * as Immutable from "immutable";
 import * as _ from "lodash";
+import { ColumnFactory, ColumnOptions } from "./column";
 import { UndefinedPropertyError } from "./error";
-import { Attributes, Mapper, MapperOptions } from "./mapper";
-import * as Type from "./type";
+import { Columns, Mapper, MapperOptions } from "./mapper";
 
 export function getMapperOf(target: Data | typeof Data): Mapper {
     let constructor: typeof Data;
@@ -27,24 +27,27 @@ export function getMapperOf(target: Data | typeof Data): Mapper {
     let service = constructor.mapperService;
     let collection = constructor.mapperCollection;
 
-    return constructor.mapper = Reflect.construct(mapper, [service, collection, constructor.attributes, options]);
+    return constructor.mapper = Reflect.construct(mapper, [service, collection, constructor.columns, options]);
 }
 
 // Data property decorator
-export function Column(type: string, attribute?: Type.AttributeOptions) {
+export function Column(type: string, options?: object | ColumnOptions) {
     return (target: Data, propertyKey: string) => {
+        const column = ColumnFactory(type, options);
+
         let constructor: Function = Object.getPrototypeOf(target).constructor;
-
-        if (attribute === undefined) {
-            attribute = { type: type };
-        } else {
-            attribute.type = type;
-        }
-
-        attribute = Type.normalizeAttribute(attribute);
-
-        constructor["attributes"].set(propertyKey, attribute);
+        constructor["columns"].set(propertyKey, column);
     };
+}
+
+export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
+    if (options === undefined) {
+        options = { primary: true };
+    } else {
+        options["primary"] = true;
+    }
+
+    return Column(type, options);
 }
 
 export abstract class Data {
@@ -54,9 +57,9 @@ export abstract class Data {
 
     public static mapperCollection: string = "";
 
-    public static mapperOptions: MapperOptions = {};
+    public static mapperOptions?: object | MapperOptions;
 
-    public static attributes: Attributes = new Map<string, Type.Attribute>();
+    public static columns: Columns = new Map();
 
     public static async find(id): Promise<Data | null> {
         return await getMapperOf(this).find(id);
@@ -64,13 +67,18 @@ export abstract class Data {
 
     protected current: { fresh: boolean, values: Immutable.Map<string, any> };
 
-    protected staged: { fresh: boolean, values: Immutable.Map<string, any> };
+    private staged: { fresh: boolean, values: Immutable.Map<string, any> };
 
     constructor(values: object = {}) {
         this.initializeProperties();
+
+        this.current = {
+            fresh: true,
+            values: Immutable.Map({}),
+        };
+
         this.snapshoot();
 
-        this.current.fresh = true;
         this.current.values = Immutable.fromJS(values);
     }
 
@@ -79,7 +87,7 @@ export abstract class Data {
     }
 
     public isDirty(): boolean {
-        return !_.isEqual(this.current.values, this.staged.values);
+        return Immutable.is(this.current.values, this.staged.values);
     }
 
     public rollback(): this {
@@ -88,38 +96,36 @@ export abstract class Data {
         return this;
     }
 
-    public has(key: string): boolean {
-        return getMapperOf(this).hasAttribute(key);
+    public hasColumn(key: string): boolean {
+        return getMapperOf(this).hasColumn(key);
     }
 
     public get(key: string) {
-        if (!this.has(key)) {
+        if (!this.hasColumn(key)) {
             throw new UndefinedPropertyError(`Undefined property ${key}`);
         }
 
         const mapper = getMapperOf(this);
-        const attribute = mapper.getAttribute(key);
-        const type = Type.get(attribute.type);
+        const column = mapper.getColumn(key);
 
         if (!this.current.hasOwnProperty(key)) {
-            return type.getDefaultValue(attribute);
+            return column.getDefaultValue();
         }
 
         const value = this.current.values.get(key);
 
-        return type.clone(value);
+        return column.clone(value);
     }
 
     public set(key: string, value): this {
         const mapper = getMapperOf(this);
-        const attribute = mapper.getAttribute(key);
-        const type = Type.get(attribute.type);
+        const column = mapper.getColumn(key);
 
-        if (!type.isNull(value)) {
-            value = type.normalize(value, attribute);
+        if (!column.isNull(value)) {
+            value = column.normalize(value);
         }
 
-        this.current.values = this.current.values.set(key, type.clone(value));
+        this.current.values = this.current.values.set(key, column.clone(value));
 
         return this;
     }
@@ -156,7 +162,8 @@ export abstract class Data {
 
     private initializeProperties() {
         let mapper = getMapperOf(this);
-        mapper.getAttributes().forEach((attribute, key) => {
+
+        mapper.getColumns().forEach((column, key) => {
             Object.defineProperty(this, key, {
                 get: () => {
                     return this.get(key);

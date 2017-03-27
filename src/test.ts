@@ -24,11 +24,10 @@ class Mapper extends Orm.Mapper {
 
 class Data extends Orm.Data {
     public static mapper = Mapper;
-    public static mapperOptions = {
-        service: "test",
-        collection: "test",
-    };
+    public static mapperService = "test";
+    public static mapperColection = "test";
 
+    // @Orm.PrimaryColumn("integer")
     @Orm.Column("integer", { primary: true })
     public id: number;
 }

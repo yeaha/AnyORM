@@ -211,6 +211,10 @@ export abstract class Data {
             const options = column.getOptions();
             const value = this.get(key, column);
 
+            if (options.autoGenerate && this.isFresh()) {
+                continue;
+            }
+
             if (column.isNull(value)) {
                 if (!options.nullable) {
                     throw new UnexpectColumnValueError(`${key} not nullable`);

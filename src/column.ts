@@ -1,8 +1,10 @@
 import * as _ from "lodash";
+import * as uuid from "uuid";
 import { UnexpectColumnValueError } from "./error";
 
 export interface ColumnOptions {
     primary: boolean;
+    autoGenerate: boolean;
     default: any;
     nullable: boolean;
     refuseUpdate: boolean;
@@ -92,6 +94,7 @@ export class AnyColumn implements ColumnInterface {
 
         const defaults: ColumnOptions = {
             primary: false,
+            autoGenerate: false,
             default: null,
             nullable: false,
             refuseUpdate: false,
@@ -107,6 +110,7 @@ export class AnyColumn implements ColumnInterface {
         }
 
         if (normalized.primary) {
+            normalized.autoGenerate = true;
             normalized.nullable = false;
             normalized.protected = true;
             normalized.refuseUpdate = true;
@@ -165,7 +169,35 @@ export class TextColumn extends AnyColumn {
     protected normalizeOptions(options): ColumnOptions {
         options = super.normalizeOptions(options);
 
-        return { ...({ trimSpace: false }), ...options };
+        return { ...({ trimSpace: true }), ...options };
+    }
+}
+
+export class UUIDColumn extends TextColumn {
+    public normalize(value) {
+        value = this.options["upperCase"]
+            ? _.toUpper(value)
+            : _.toLower(value);
+
+        return super.normalize(value);
+    }
+
+    public getDefaultValue() {
+        if (this.options.autoGenerate) {
+            return this.normalize(this.generate());
+        }
+
+        return this.options.default;
+    }
+
+    public generate(): string {
+        return this.normalize(uuid.v4());
+    }
+
+    protected normalizeOptions(options): ColumnOptions {
+        options = super.normalizeOptions(options);
+
+        return { ...({ upperCase: false }), ...options };
     }
 }
 
@@ -173,3 +205,4 @@ ColumnRegister("any", AnyColumn);
 ColumnRegister("numeric", NumericColumn);
 ColumnRegister("integer", IntegerColumn);
 ColumnRegister("text", TextColumn);
+ColumnRegister("uuid", UUIDColumn);

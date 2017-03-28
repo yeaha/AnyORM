@@ -63,3 +63,24 @@ test("ColumnFactory", (t) => {
         }, AnyORM.UnexpectColumnValueError);
     });
 })();
+
+// UUID Type
+(() => {
+    test("UUID auto generator", (t) => {
+        const column = AnyORM.ColumnFactory("uuid", { autoGenerate: true });
+
+        t.regex(column.getDefaultValue(), /^[0-9a-f\-]{36}$/);
+    });
+
+    test("UUID upperCase option", (t) => {
+        const column = AnyORM.ColumnFactory("uuid", { upperCase: true }) as AnyORM.UUIDColumn;
+
+        t.regex(column.generate(), /^[0-9A-Z\-]{36}$/);
+    });
+
+    test("UUID as primary key", (t) => {
+        const column = AnyORM.ColumnFactory("uuid", { primary: true });
+
+        t.regex(column.getDefaultValue(), /^[0-9a-f\-]{36}$/);
+    });
+})();

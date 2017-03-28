@@ -1,6 +1,6 @@
 import { ColumnInterface } from "./column";
 import { Data } from "./data";
-import { UndefinedPropertyError } from "./error";
+import { UndefinedColumnError } from "./error";
 
 export type Columns = Map<string, ColumnInterface>;
 
@@ -93,7 +93,7 @@ export abstract class Mapper {
         const column = this.columns.get(key);
 
         if (column === undefined) {
-            throw new UndefinedPropertyError(`Undefined column: ${key}`);
+            throw new UndefinedColumnError(`Undefined column: ${key}`);
         }
 
         return column;

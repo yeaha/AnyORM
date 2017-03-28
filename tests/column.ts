@@ -56,10 +56,10 @@ test("ColumnFactory", (t) => {
     test("NumericColumn.normalize() unexpect value", (t) => {
         t.throws(() => {
             column.normalize(Infinity);
-        }, AnyORM.UnexpectPropertyValueError);
+        }, AnyORM.UnexpectColumnValueError);
 
         t.throws(() => {
             column.normalize("a");
-        }, AnyORM.UnexpectPropertyValueError);
+        }, AnyORM.UnexpectColumnValueError);
     });
 })();

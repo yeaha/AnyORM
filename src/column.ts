@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import { UnexpectPropertyValueError } from "./error";
+import { UnexpectColumnValueError } from "./error";
 
 export interface ColumnOptions {
     primary: boolean;
@@ -121,9 +121,9 @@ export class NumericColumn extends AnyColumn {
         value = _.toNumber(value);
 
         if (value === Infinity) {
-            throw new UnexpectPropertyValueError("Infinity number");
+            throw new UnexpectColumnValueError("Infinity number");
         } else if (_.isNaN(value)) {
-            throw new UnexpectPropertyValueError("Not a number");
+            throw new UnexpectColumnValueError("Not a number");
         }
 
         return value;

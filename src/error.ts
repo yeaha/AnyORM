@@ -1,16 +1,24 @@
-export class UnexpectPropertyValueError extends Error {
+export class UnexpectColumnValueError extends Error {
     constructor(message: string) {
         super(message);
 
-        Object.setPrototypeOf(this, UnexpectPropertyValueError.prototype);
+        Object.setPrototypeOf(this, UnexpectColumnValueError.prototype);
     }
 }
 
-export class UndefinedPropertyError extends Error {
+export class UndefinedColumnError extends Error {
     constructor(message: string) {
         super(message);
 
-        Object.setPrototypeOf(this, UndefinedPropertyError.prototype);
+        Object.setPrototypeOf(this, UndefinedColumnError.prototype);
+    }
+}
+
+export class RefuseUpdateColumnError extends Error {
+    constructor(message: string) {
+        super(message);
+
+        Object.setPrototypeOf(this, RefuseUpdateColumnError.prototype);
     }
 }
 

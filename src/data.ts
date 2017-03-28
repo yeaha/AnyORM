@@ -1,7 +1,6 @@
-import * as Immutable from "immutable";
-import * as _ from "lodash";
-import { ColumnFactory, ColumnOptions } from "./column";
-import { UndefinedPropertyError } from "./error";
+// import * as _ from "lodash";
+import { ColumnFactory, ColumnInterface, ColumnOptions } from "./column";
+import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
 import { Columns, Mapper, MapperOptions } from "./mapper";
 
 export function getMapperOf(target: Data | typeof Data): Mapper {
@@ -65,104 +64,111 @@ export abstract class Data {
         return await getMapperOf(this).find(id);
     }
 
-    protected current: { fresh: boolean, values: Immutable.Map<string, any> };
+    protected fresh: boolean = true;
 
-    private staged: { fresh: boolean, values: Immutable.Map<string, any> };
+    protected values: Map<string, any> = new Map();
 
-    constructor(values: object = {}) {
+    private changedColumns: Set<string> = new Set();
+
+    constructor(values?: object) {
         this.initializeProperties();
 
-        this.current = {
-            fresh: true,
-            values: Immutable.Map({}),
-        };
-
-        this.snapshoot();
-
-        this.current.values = Immutable.fromJS(values);
+        if (values !== undefined) {
+            getMapperOf(this).getColumns().forEach((column, key) => {
+                if (values.hasOwnProperty(key)) {
+                    this.set(key, values[key], column);
+                }
+            });
+        }
     }
 
     public isFresh(): boolean {
-        return this.current.fresh;
+        return this.fresh;
     }
 
     public isDirty(key?: string): boolean {
         if (key === undefined) {
-            return !Immutable.is(this.current.values, this.staged.values);
+            return this.changedColumns.size > 0;
         }
 
-        return !Immutable.is(
-            this.current.values.get(key),
-            this.staged.values.get(key),
-        );
-    }
-
-    public rollback(): this {
-        this.current = _.cloneDeep(this.staged);
-
-        return this;
+        return this.changedColumns.has(key);
     }
 
     public hasColumn(key: string): boolean {
         return getMapperOf(this).hasColumn(key);
     }
 
-    public get(key: string) {
-        if (!this.hasColumn(key)) {
-            throw new UndefinedPropertyError(`Undefined property ${key}`);
+    public get(key: string, column?: ColumnInterface) {
+        if (column === undefined) {
+            if (!this.hasColumn(key)) {
+                throw new UndefinedColumnError(`Undefined property ${key}`);
+            }
+
+            column = getMapperOf(this).getColumn(key);
         }
 
-        const mapper = getMapperOf(this);
-        const column = mapper.getColumn(key);
-
-        if (!this.current.values.has(key)) {
-            return column.getDefaultValue();
-        }
-
-        const value = this.current.values.get(key);
+        const value = this.values.has(key)
+            ? this.values.get(key)
+            : column.getDefaultValue();
 
         return column.clone(value);
     }
 
-    public set(key: string, value): this {
-        const mapper = getMapperOf(this);
-        const column = mapper.getColumn(key);
+    public set(key: string, value, column?: ColumnInterface): this {
+        if (column === undefined) {
+            if (!this.hasColumn(key)) {
+                throw new UndefinedColumnError(`Undefined property ${key}`);
+            }
 
-        if (!column.isNull(value)) {
-            value = column.normalize(value);
+            column = getMapperOf(this).getColumn(key);
         }
 
-        this.current.values = this.current.values.set(key, column.clone(value));
+        const options = column.getOptions();
+
+        if (options.refuseUpdate && !this.fresh) {
+            throw new RefuseUpdateColumnError(`${key} refuse update`);
+        }
+
+        this.change(key, value, column);
 
         return this;
     }
 
-    public merge(values: object): this {
-        _.each(values, (value, key: string) => {
-            try {
-                this.set(key, value);
-            } catch (e) {
-                if (e instanceof UndefinedPropertyError) {
-                    return true;
-                }
+    public merge(values: object, strict: boolean = false): this {
+        const columns = getMapperOf(this).getColumns();
 
-                throw e;
+        for (const key of Object.keys(values)) {
+            if (!columns.has(key)) {
+                continue;
             }
-        });
+
+            const column = columns.get(key) as ColumnInterface;
+            const options = column.getOptions();
+
+            if (options.refuseUpdate && !this.fresh) {
+                continue;
+            }
+
+            if (options.protected || options.strict) {
+                continue;
+            }
+
+            this.change(key, values[key], column);
+        }
 
         return this;
     }
 
-    public async save() {
-        return await getMapperOf(this).save(this);
+    public async save(): Promise<this> {
+        this.validate();
+
+        await getMapperOf(this).save(this);
+
+        return this;
     }
 
-    public async destroy() {
-        return await getMapperOf(this).destroy(this);
-    }
-
-    private snapshoot(): this {
-        this.staged = _.cloneDeep(this.current);
+    public async destroy(): Promise<this> {
+        await getMapperOf(this).destroy(this);
 
         return this;
     }
@@ -173,12 +179,48 @@ export abstract class Data {
         mapper.getColumns().forEach((column, key) => {
             Object.defineProperty(this, key, {
                 get: () => {
-                    return this.get(key);
+                    return this.get(key, column);
                 },
-                set: (val) => {
-                    return this.set(key, val);
+                set: (value) => {
+                    return this.set(key, value, column);
                 },
             });
         });
+    }
+
+    private change(key: string, value, column: ColumnInterface): void {
+        value = column.normalize(value);
+
+        if (value !== this.values.get(key)) {
+            value = column.clone(value);
+
+            this.values.set(key, value);
+            this.changedColumns.add(key);
+        }
+    }
+
+    private validate(): void {
+        const columns = getMapperOf(this).getColumns();
+
+        let keys = this.isFresh()
+            ? this.values.keys()
+            : this.changedColumns.keys();
+
+        for (const key of keys) {
+            const column = columns.get(key) as ColumnInterface;
+            const options = column.getOptions();
+            const value = this.get(key, column);
+
+            if (column.isNull(value)) {
+                if (!options.nullable) {
+                    throw new UnexpectColumnValueError(`${key} not nullable`);
+                }
+            } else {
+                const re = options.regexp;
+                if (re instanceof RegExp && !re.test(value)) {
+                    throw new UnexpectColumnValueError(`${key} missmatch pattern ${re}`);
+                }
+            }
+        }
     }
 }

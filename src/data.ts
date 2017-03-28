@@ -86,8 +86,15 @@ export abstract class Data {
         return this.current.fresh;
     }
 
-    public isDirty(): boolean {
-        return Immutable.is(this.current.values, this.staged.values);
+    public isDirty(key?: string): boolean {
+        if (key === undefined) {
+            return !Immutable.is(this.current.values, this.staged.values);
+        }
+
+        return !Immutable.is(
+            this.current.values.get(key),
+            this.staged.values.get(key),
+        );
     }
 
     public rollback(): this {
@@ -108,7 +115,7 @@ export abstract class Data {
         const mapper = getMapperOf(this);
         const column = mapper.getColumn(key);
 
-        if (!this.current.hasOwnProperty(key)) {
+        if (!this.current.values.has(key)) {
             return column.getDefaultValue();
         }
 

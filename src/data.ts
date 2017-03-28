@@ -221,6 +221,8 @@ export abstract class Data {
                     throw new UnexpectColumnValueError(`${key} missmatch pattern ${re}`);
                 }
             }
+
+            column.validate(value);
         }
     }
 }

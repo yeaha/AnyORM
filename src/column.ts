@@ -25,6 +25,7 @@ export interface ColumnInterface {
     clone(value);
     isNull(value): boolean;
     getOptions(): ColumnOptions;
+    validate(value): void;
 }
 
 let constructors = new Map<string, ColumnConstructor>();
@@ -80,6 +81,10 @@ export class AnyColumn implements ColumnInterface {
 
     public getOptions(): ColumnOptions {
         return this.options;
+    }
+
+    public validate(value): void {
+
     }
 
     protected normalizeOptions(options?: object | ColumnOptions): ColumnOptions {

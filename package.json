@@ -27,6 +27,7 @@
     "@types/node": "^7.0.8",
     "ava": "^0.18.2",
     "gulp": "^3.9.1",
+    "gulp-ava": "^0.16.0",
     "gulp-typescript": "^3.1.5",
     "gulp-watch": "^4.3.11"
   },

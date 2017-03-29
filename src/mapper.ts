@@ -1,27 +1,31 @@
+// import * as _ from "lodash";
 import { ColumnInterface } from "./column";
 import { Data } from "./data";
-import { UndefinedColumnError } from "./error";
+import { UndefinedColumnError, UnexpectColumnValueError } from "./error";
 
 export type Columns = Map<string, ColumnInterface>;
 
 export interface MapperOptions {
+    service: string;
+    collection: string;
     readonly: boolean;
     strict: boolean;
     [key: string]: any;
 }
 
 export abstract class Mapper {
+    protected dataConstructor: typeof Data;
     protected columns: Columns;
-    protected service: string;
-    protected collection: string;
     protected primaryKeys: Columns = new Map();
     protected options: MapperOptions;
 
-    constructor(service: string, collection: string, columns: Columns, options?: object | MapperOptions) {
-        this.service = service;
-        this.collection = collection;
+    constructor(dataConstructor: typeof Data, columns: Columns, options?: object | MapperOptions) {
+        this.dataConstructor = dataConstructor;
+        this.setColumns(columns);
 
         let defaults = {
+            service: "",
+            collection: "",
             readonly: false,
             strict: false,
         };
@@ -31,8 +35,6 @@ export abstract class Mapper {
         } else {
             this.options = { ...defaults, ...options } as MapperOptions;
         }
-
-        this.setColumns(columns);
     }
 
     public isReadonly(): boolean {
@@ -56,7 +58,9 @@ export abstract class Mapper {
     }
 
     public getCollection(id?: object): string {
-        return this.collection;
+        const collection = this.options.collection;
+
+        return collection;
     }
 
     public getPrimaryKeys(): Columns {
@@ -65,6 +69,7 @@ export abstract class Mapper {
 
     public setColumns(columns: Columns): this {
         this.columns = columns;
+        this.primaryKeys.clear();
 
         columns.forEach((column, key) => {
             const options = column.getOptions();
@@ -99,37 +104,154 @@ export abstract class Mapper {
         return column;
     }
 
+    public pack(record: object, data?: Data): Data {
+        const columns = this.columns;
+        let values = new Map<string, any>();
+
+        columns.forEach((column, key) => {
+            if (record.hasOwnProperty(key)) {
+                values.set(key, column.retrieve(record[key]));
+            }
+        });
+
+        if (data === undefined) {
+            data = Reflect.construct(this.dataConstructor, []) as Data;
+        }
+        data.__import(values);
+
+        return data;
+    }
+
+    public unpack(data: Data): Map<string, any> {
+        let record = new Map();
+
+        data.getValues().forEach((value, key) => {
+            if (value !== null) {
+                value = this.getColumn(key).store(value);
+            }
+
+            record.set(key, value);
+        });
+
+        return record;
+    }
+
     public async find(id): Promise<Data | null> {
-        return Promise.resolve(null);
+        id = this.normalizeID(id);
+
+        const record = await this.doFind(id);
+        if (record === null) {
+            return null;
+        }
+
+        return this.pack(record);
+    }
+
+    public async refresh(data: Data): Promise<Data> {
+        if (data.isFresh()) {
+            return data;
+        }
+
+        const record = await this.doFind(data.getIDValues());
+        if (record === null) {
+            throw new Error();
+        }
+
+        return this.pack(record, data);
     }
 
     public async save(data: Data): Promise<Data> {
-        return Promise.resolve(data);
+        if (this.isReadonly()) {
+            throw new Error();
+        }
+
+        if (!data.isFresh() && !data.isDirty()) {
+            return data;
+        }
+
+        data.emit(`before:save`);
+
+        if (data.isFresh()) {
+            await this.insert(data);
+        } else {
+            await this.update(data);
+        }
+
+        data.emit(`after:save`);
+
+        return data;
     }
 
     public async destroy(data: Data): Promise<boolean> {
-        if (data.isFresh()) {
-            return Promise.resolve(true);
+        if (this.isReadonly()) {
+            throw new Error();
         }
 
-        return await this.doDelete(data);
+        if (data.isFresh()) {
+            return true;
+        }
+
+        data.emit(`before:delete`);
+
+        const result = await this.doDelete(data);
+        if (result === false) {
+            throw new Error();
+        }
+
+        data.emit(`after:delete`);
+
+        return result;
     }
 
     protected async insert(data: Data): Promise<Data> {
-        await this.doInsert(data);
+        data.emit(`before:insert`);
+        data.validate();
 
-        return Promise.resolve(data);
+        const record = await this.doInsert(data);
+
+        data = this.pack(record, data);
+        data.emit(`after:insert`);
+
+        return data;
     }
 
     protected async update(data: Data): Promise<Data> {
-        await this.doUpdate(data);
+        data.emit(`before:update`);
+        data.validate();
 
-        return Promise.resolve(data);
+        const record = await this.doUpdate(data);
+
+        data = this.pack(record, data);
+        data.emit(`after:update`);
+
+        return data;
     }
 
     protected abstract getService(id?: object);
-    protected abstract async doFind(id: object, service?: object, collection?: string): Promise<object>;
+    protected abstract async doFind(id: object, service?: object, collection?: string): Promise<object | null>;
     protected abstract async doInsert(data: Data, service?: object, collection?: string): Promise<object>;
     protected abstract async doUpdate(data: Data, service?: object, collection?: string): Promise<object>;
     protected abstract async doDelete(data: Data, service?: object, collection?: string): Promise<boolean>;
+
+    private normalizeID(id): object {
+        const columns = this.primaryKeys;
+        let result = {};
+
+        if (typeof id !== "object") {
+            const key = columns.keys().next().value;
+            result[key] = id;
+
+            return result;
+        }
+
+        columns.forEach((column, key) => {
+            if (!id.hasOwnProperty(key)) {
+                throw new UnexpectColumnValueError(`Illegal id value`);
+            }
+
+            result[key] = id[key];
+        });
+
+        return result;
+    }
 }

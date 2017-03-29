@@ -6,11 +6,21 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
 }
 
+class Data extends AnyORM.Data {
+
+}
+
 (() => {
     let columns: AnyORM.Columns = new Map();
     columns.set("id", AnyORM.ColumnFactory("numeric", { primary: true }));
 
-    let mapper = new Mapper("test.service", "test.collection", columns, { foo: "FOO" });
+    const options = {
+        service: "test.service",
+        collection: "test.collection",
+        foo: "FOO",
+    };
+
+    let mapper = new Mapper(Data, columns, options);
     test("Getter", (t) => {
         t.is(mapper.getService(), "test.service");
         t.is(mapper.getCollection(), "test.collection");

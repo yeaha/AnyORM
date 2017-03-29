@@ -1,4 +1,4 @@
-// import * as _ from "lodash";
+import * as EventEmitter from "events";
 import { ColumnFactory, ColumnInterface, ColumnOptions } from "./column";
 import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
 import { Columns, Mapper, MapperOptions } from "./mapper";
@@ -23,10 +23,14 @@ export function getMapperOf(target: Data | typeof Data): Mapper {
     }
 
     let options = constructor.mapperOptions;
-    let service = constructor.mapperService;
-    let collection = constructor.mapperCollection;
+    if (options === undefined) {
+        options = {};
+    }
 
-    return constructor.mapper = Reflect.construct(mapper, [service, collection, constructor.columns, options]);
+    options["service"] = constructor.mapperService;
+    options["collection"] = constructor.mapperCollection;
+
+    return constructor.mapper = Reflect.construct(mapper, [constructor, constructor.columns, options]);
 }
 
 // Data property decorator
@@ -49,7 +53,7 @@ export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
     return Column(type, options);
 }
 
-export abstract class Data {
+export abstract class Data extends EventEmitter {
     public static mapper: Mapper | typeof Mapper;
 
     public static mapperService: string = "";
@@ -71,6 +75,8 @@ export abstract class Data {
     private changedColumns: Set<string> = new Set();
 
     constructor(values?: object) {
+        super();
+
         this.initializeProperties();
 
         if (values !== undefined) {
@@ -80,6 +86,17 @@ export abstract class Data {
                 }
             });
         }
+    }
+
+    public __import(values: Map<string, any>): this {
+        values.forEach((value, key) => {
+            this.values.set(key, value);
+        });
+
+        this.fresh = false;
+        this.changedColumns.clear();
+
+        return this;
     }
 
     public isFresh(): boolean {
@@ -96,6 +113,26 @@ export abstract class Data {
 
     public hasColumn(key: string): boolean {
         return getMapperOf(this).hasColumn(key);
+    }
+
+    public getID() {
+        let id = this.getIDValues();
+
+        if (Object.keys(id).length > 1) {
+            return id;
+        }
+
+        return Object.values(id).shift();
+    }
+
+    public getIDValues(): object {
+        let id = {};
+
+        getMapperOf(this).getPrimaryKeys().forEach((column, key) => {
+            id[key] = this.get(key, column);
+        });
+
+        return id;
     }
 
     public get(key: string, column?: ColumnInterface) {
@@ -132,6 +169,30 @@ export abstract class Data {
         this.change(key, value, column);
 
         return this;
+    }
+
+    public pick(...keys: string[]): Map<string, any> {
+        const columns = getMapperOf(this).getColumns();
+        let values = new Map<string, any>();
+
+        for (const key of keys) {
+            if (columns.has(key)) {
+                values.set(key, this.get(key));
+            }
+        }
+
+        return values;
+    }
+
+    public getValues(): Map<string, any> {
+        const columns = getMapperOf(this).getColumns();
+        let values = new Map<string, any>();
+
+        columns.forEach((column, key) => {
+            values.set(key, this.get(key, column));
+        });
+
+        return values;
     }
 
     public merge(values: object, strict: boolean = false): this {
@@ -173,33 +234,7 @@ export abstract class Data {
         return this;
     }
 
-    private initializeProperties() {
-        let mapper = getMapperOf(this);
-
-        mapper.getColumns().forEach((column, key) => {
-            Object.defineProperty(this, key, {
-                get: () => {
-                    return this.get(key, column);
-                },
-                set: (value) => {
-                    return this.set(key, value, column);
-                },
-            });
-        });
-    }
-
-    private change(key: string, value, column: ColumnInterface): void {
-        value = column.normalize(value);
-
-        if (value !== this.values.get(key)) {
-            value = column.clone(value);
-
-            this.values.set(key, value);
-            this.changedColumns.add(key);
-        }
-    }
-
-    private validate(): void {
+    public validate(): void {
         const columns = getMapperOf(this).getColumns();
 
         let keys = this.isFresh()
@@ -227,6 +262,32 @@ export abstract class Data {
             }
 
             column.validate(value);
+        }
+    }
+
+    private initializeProperties() {
+        let mapper = getMapperOf(this);
+
+        mapper.getColumns().forEach((column, key) => {
+            Object.defineProperty(this, key, {
+                get: () => {
+                    return this.get(key, column);
+                },
+                set: (value) => {
+                    return this.set(key, value, column);
+                },
+            });
+        });
+    }
+
+    private change(key: string, value, column: ColumnInterface): void {
+        value = column.normalize(value);
+
+        if (value !== this.values.get(key)) {
+            value = column.clone(value);
+
+            this.values.set(key, value);
+            this.changedColumns.add(key);
         }
     }
 }

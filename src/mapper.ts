@@ -1,4 +1,5 @@
 // import * as _ from "lodash";
+import * as EventEmitter from "events";
 import { ColumnInterface } from "./column";
 import { Data } from "./data";
 import { UndefinedColumnError, UnexpectColumnValueError } from "./error";
@@ -13,13 +14,15 @@ export interface MapperOptions {
     [key: string]: any;
 }
 
-export abstract class Mapper {
+export abstract class Mapper extends EventEmitter {
     protected dataConstructor: typeof Data;
     protected columns: Columns;
     protected primaryKeys: Columns = new Map();
     protected options: MapperOptions;
 
     constructor(dataConstructor: typeof Data, columns: Columns, options?: object | MapperOptions) {
+        super();
+
         this.dataConstructor = dataConstructor;
         this.setColumns(columns);
 
@@ -65,25 +68,6 @@ export abstract class Mapper {
 
     public getPrimaryKeys(): Columns {
         return this.primaryKeys;
-    }
-
-    public setColumns(columns: Columns): this {
-        this.columns = columns;
-        this.primaryKeys.clear();
-
-        columns.forEach((column, key) => {
-            const options = column.getOptions();
-
-            if (options.primary) {
-                this.primaryKeys.set(key, column);
-            }
-        });
-
-        if (!this.primaryKeys.size) {
-            throw new Error();
-        }
-
-        return this;
     }
 
     public hasColumn(key: string): boolean {
@@ -170,6 +154,7 @@ export abstract class Mapper {
         }
 
         data.emit(`before:save`);
+        this.emit(`before:save`, data);
 
         if (data.isFresh()) {
             await this.insert(data);
@@ -178,6 +163,7 @@ export abstract class Mapper {
         }
 
         data.emit(`after:save`);
+        this.emit(`after:save`, data);
 
         return data;
     }
@@ -192,6 +178,7 @@ export abstract class Mapper {
         }
 
         data.emit(`before:delete`);
+        this.emit(`before:delete`, data);
 
         const result = await this.doDelete(data);
         if (result === false) {
@@ -199,18 +186,40 @@ export abstract class Mapper {
         }
 
         data.emit(`after:delete`);
+        this.emit(`after:delete`, data);
 
         return result;
+    }
+
+    protected setColumns(columns: Columns): this {
+        this.columns = columns;
+        this.primaryKeys.clear();
+
+        columns.forEach((column, key) => {
+            const options = column.getOptions();
+
+            if (options.primary) {
+                this.primaryKeys.set(key, column);
+            }
+        });
+
+        if (!this.primaryKeys.size) {
+            throw new Error();
+        }
+
+        return this;
     }
 
     protected async insert(data: Data): Promise<Data> {
         data.emit(`before:insert`);
         data.validate();
+        this.emit(`before:insert`, data);
 
         const record = await this.doInsert(data);
-
         data = this.pack(record, data);
+
         data.emit(`after:insert`);
+        this.emit(`after:insert`, data);
 
         return data;
     }
@@ -218,11 +227,13 @@ export abstract class Mapper {
     protected async update(data: Data): Promise<Data> {
         data.emit(`before:update`);
         data.validate();
+        this.emit(`before:update`, data);
 
         const record = await this.doUpdate(data);
-
         data = this.pack(record, data);
+
         data.emit(`after:update`);
+        this.emit(`after:update`, data);
 
         return data;
     }

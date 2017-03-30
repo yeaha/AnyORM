@@ -78,6 +78,7 @@ export abstract class Data extends EventEmitter {
         super();
 
         this.initializeProperties();
+        this.initializeEvents();
 
         if (values !== undefined) {
             getMapperOf(this).getColumns().forEach((column, key) => {
@@ -265,6 +266,18 @@ export abstract class Data extends EventEmitter {
         }
     }
 
+    protected beforeSave(): void { }
+    protected afterSave(): void { }
+
+    protected beforeInsert(): void { }
+    protected afterInsert(): void { }
+
+    protected beforeUpdate(): void { }
+    protected afterUpdate(): void { }
+
+    protected beforeDelete(): void { }
+    protected afterDelete(): void { }
+
     private initializeProperties() {
         let mapper = getMapperOf(this);
 
@@ -278,6 +291,20 @@ export abstract class Data extends EventEmitter {
                 },
             });
         });
+    }
+
+    private initializeEvents() {
+        this.on(`before:save`, this.beforeSave.bind(this));
+        this.on(`after:save`, this.afterSave.bind(this));
+
+        this.on(`before:insert`, this.beforeInsert.bind(this));
+        this.on(`after:insert`, this.afterInsert.bind(this));
+
+        this.on(`before:update`, this.beforeUpdate.bind(this));
+        this.on(`after:update`, this.afterUpdate.bind(this));
+
+        this.on(`before:delete`, this.beforeDelete.bind(this));
+        this.on(`after:delete`, this.afterDelete.bind(this));
     }
 
     private change(key: string, value, column: ColumnInterface): void {

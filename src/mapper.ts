@@ -40,19 +40,19 @@ export abstract class Mapper extends EventEmitter {
         }
     }
 
-    public isReadonly(): boolean {
+    isReadonly(): boolean {
         return this.getOption("readonly");
     }
 
-    public hasOption(key: string): boolean {
+    hasOption(key: string): boolean {
         return this.options.hasOwnProperty(key);
     }
 
-    public getOptions(): object {
+    getOptions(): object {
         return this.options;
     }
 
-    public getOption(key: string) {
+    getOption(key: string) {
         if (!this.hasOption(key)) {
             throw new Error(`Undefined Mapper option: ${key}`);
         }
@@ -60,25 +60,25 @@ export abstract class Mapper extends EventEmitter {
         return this.options[key];
     }
 
-    public getCollection(id?: object): string {
+    getCollection(id?: object): string {
         const collection = this.options.collection;
 
         return collection;
     }
 
-    public getPrimaryKeys(): Columns {
+    getPrimaryKeys(): Columns {
         return this.primaryKeys;
     }
 
-    public hasColumn(key: string): boolean {
+    hasColumn(key: string): boolean {
         return this.columns.has(key);
     }
 
-    public getColumns(): Columns {
+    getColumns(): Columns {
         return this.columns;
     }
 
-    public getColumn(key: string): ColumnInterface {
+    getColumn(key: string): ColumnInterface {
         const column = this.columns.get(key);
 
         if (column === undefined) {
@@ -88,7 +88,7 @@ export abstract class Mapper extends EventEmitter {
         return column;
     }
 
-    public pack(record: object, data?: Data): Data {
+    pack(record: object, data?: Data): Data {
         const columns = this.columns;
         let values = Map() as Values;
 
@@ -106,7 +106,7 @@ export abstract class Mapper extends EventEmitter {
         return data;
     }
 
-    public unpack(data: Data): Values {
+    unpack(data: Data): Values {
         let record = Map() as Values;
 
         data.getValues().forEach((value, key) => {
@@ -120,7 +120,7 @@ export abstract class Mapper extends EventEmitter {
         return record;
     }
 
-    public async find(id): Promise<Data | null> {
+    async find(id): Promise<Data | null> {
         id = this.normalizeID(id);
 
         const record = await this.doFind(id);
@@ -131,7 +131,7 @@ export abstract class Mapper extends EventEmitter {
         return this.pack(record);
     }
 
-    public async refresh(data: Data): Promise<Data> {
+    async refresh(data: Data): Promise<Data> {
         if (data.isFresh()) {
             return data;
         }
@@ -144,7 +144,7 @@ export abstract class Mapper extends EventEmitter {
         return this.pack(record, data);
     }
 
-    public async save(data: Data): Promise<Data> {
+    async save(data: Data): Promise<Data> {
         if (this.isReadonly()) {
             throw new Error();
         }
@@ -168,7 +168,7 @@ export abstract class Mapper extends EventEmitter {
         return data;
     }
 
-    public async destroy(data: Data): Promise<boolean> {
+    async destroy(data: Data): Promise<boolean> {
         if (this.isReadonly()) {
             throw new Error();
         }

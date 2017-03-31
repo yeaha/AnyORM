@@ -49,43 +49,43 @@ export function columnFactory(type: string, options?: object | ColumnOptions): C
 export class AnyColumn implements ColumnInterface {
     protected options: ColumnOptions;
 
-    public constructor(options?: object | ColumnOptions) {
+    constructor(options?: object | ColumnOptions) {
         this.options = this.normalizeOptions(options);
     }
 
-    public normalize(value) {
+    normalize(value) {
         return value;
     }
 
-    public store(value) {
+    store(value) {
         return this.isNull(value) ? null : value;
     }
 
-    public retrieve(value) {
+    retrieve(value) {
         return this.isNull(value) ? null : this.normalize(value);
     }
 
-    public getDefaultValue() {
+    getDefaultValue() {
         return this.options.default;
     }
 
-    public toJson(value) {
+    toJson(value) {
         return value;
     }
 
-    public clone(value) {
+    clone(value) {
         return _.isObject(value) ? _.cloneDeep(value) : value;
     }
 
-    public isNull(value): boolean {
+    isNull(value): boolean {
         return value === "" || value === null || value === undefined;
     }
 
-    public getOptions(): ColumnOptions {
+    getOptions(): ColumnOptions {
         return this.options;
     }
 
-    public validate(value): void {
+    validate(value): void {
 
     }
 
@@ -126,7 +126,7 @@ export class AnyColumn implements ColumnInterface {
 }
 
 export class NumericColumn extends AnyColumn {
-    public normalize(value): number {
+    normalize(value): number {
         value = _.toNumber(value);
 
         if (value === Infinity) {
@@ -140,7 +140,7 @@ export class NumericColumn extends AnyColumn {
 }
 
 export class IntegerColumn extends NumericColumn {
-    public normalize(value): number {
+    normalize(value): number {
         value = super.normalize(value);
 
         return _.toInteger(value);
@@ -148,7 +148,7 @@ export class IntegerColumn extends NumericColumn {
 }
 
 export class TextColumn extends AnyColumn {
-    public normalize(value) {
+    normalize(value) {
         value = _.toString(value);
 
         if (this.options["trimSpace"]) {
@@ -158,11 +158,11 @@ export class TextColumn extends AnyColumn {
         return value;
     }
 
-    public store(value) {
+    store(value) {
         return this.isNull(value) ? null : _.toString(value);
     }
 
-    public retrieve(value) {
+    retrieve(value) {
         return this.isNull(value) ? "" : value;
     }
 
@@ -174,7 +174,7 @@ export class TextColumn extends AnyColumn {
 }
 
 export class UUIDColumn extends TextColumn {
-    public normalize(value) {
+    normalize(value) {
         value = this.options["upperCase"]
             ? _.toUpper(value)
             : _.toLower(value);
@@ -182,7 +182,7 @@ export class UUIDColumn extends TextColumn {
         return super.normalize(value);
     }
 
-    public getDefaultValue() {
+    getDefaultValue() {
         if (this.options.autoGenerate) {
             return this.normalize(this.generate());
         }
@@ -190,7 +190,7 @@ export class UUIDColumn extends TextColumn {
         return this.options.default;
     }
 
-    public generate(): string {
+    generate(): string {
         return this.normalize(uuid.v4());
     }
 

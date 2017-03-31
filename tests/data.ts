@@ -10,16 +10,16 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
 (() => {
     class Data extends AnyORM.Data {
-        public static mapper = Mapper;
+        static mapper = Mapper;
 
         @AnyORM.PrimaryColumn("integer")
-        public id: number;
+        id: number;
 
         @AnyORM.Column("string")
-        public foo: string;
+        foo: string;
 
         @AnyORM.Column("string")
-        public bar: string;
+        bar: string;
     }
 
     test("Construct", (t) => {
@@ -118,20 +118,20 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
 (() => {
     class SinglePKData extends AnyORM.Data {
-        public static mapper = Mapper;
+        static mapper = Mapper;
 
         @AnyORM.PrimaryColumn("uuid")
-        public id: string;
+        id: string;
     }
 
     class MultiplePKData extends AnyORM.Data {
-        public static mapper = Mapper;
+        static mapper = Mapper;
 
         @AnyORM.PrimaryColumn("uuid")
-        public foo_id: string;
+        foo_id: string;
 
         @AnyORM.PrimaryColumn("uuid")
-        public bar_id: string;
+        bar_id: string;
     }
 
     test("Get id", (t) => {

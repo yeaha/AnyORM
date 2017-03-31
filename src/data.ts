@@ -60,17 +60,17 @@ export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
 }
 
 export abstract class Data extends EventEmitter {
-    public static mapper: Mapper | typeof Mapper;
+    static mapper: Mapper | typeof Mapper;
 
-    public static mapperService: string = "";
+    static mapperService: string = "";
 
-    public static mapperCollection: string = "";
+    static mapperCollection: string = "";
 
-    public static mapperOptions?: object | MapperOptions;
+    static mapperOptions?: object | MapperOptions;
 
-    public static columns: Columns = Map() as Columns;
+    static columns: Columns = Map() as Columns;
 
-    public static async find(id): Promise<Data | null> {
+    static async find(id): Promise<Data | null> {
         return await getMapperOf(this).find(id);
     }
 
@@ -101,7 +101,7 @@ export abstract class Data extends EventEmitter {
         });
     }
 
-    public __retrieve(values: Values): this {
+    __retrieve(values: Values): this {
         this.current.fresh = false;
         this.current.values = this.current.values.merge(values);
 
@@ -110,18 +110,18 @@ export abstract class Data extends EventEmitter {
         return this;
     }
 
-    public rollback(): this {
+    rollback(): this {
         this.current.fresh = this.staged.fresh;
         this.current.values = this.staged.values;
 
         return this;
     }
 
-    public isFresh(): boolean {
+    isFresh(): boolean {
         return this.current.fresh;
     }
 
-    public isDirty(key?: string): boolean {
+    isDirty(key?: string): boolean {
         if (key === undefined) {
             return !isSame(this.current.values, this.staged.values);
         }
@@ -132,11 +132,11 @@ export abstract class Data extends EventEmitter {
         );
     }
 
-    public hasColumn(key: string): boolean {
+    hasColumn(key: string): boolean {
         return getMapperOf(this).hasColumn(key);
     }
 
-    public getID() {
+    getID() {
         const id = this.getIDValues();
 
         return id.size === 1
@@ -144,7 +144,7 @@ export abstract class Data extends EventEmitter {
             : id;
     }
 
-    public getIDValues(): Values {
+    getIDValues(): Values {
         let id = Map() as Values;
 
         getMapperOf(this).getPrimaryKeys().forEach((column, key) => {
@@ -154,7 +154,7 @@ export abstract class Data extends EventEmitter {
         return id;
     }
 
-    public get(key: string, column?: ColumnInterface) {
+    get(key: string, column?: ColumnInterface) {
         if (column === undefined) {
             if (!this.hasColumn(key)) {
                 throw new UndefinedColumnError(`Undefined property ${key}`);
@@ -170,7 +170,7 @@ export abstract class Data extends EventEmitter {
         return column.clone(value);
     }
 
-    public set(key: string, value, column?: ColumnInterface): this {
+    set(key: string, value, column?: ColumnInterface): this {
         if (column === undefined) {
             if (!this.hasColumn(key)) {
                 throw new UndefinedColumnError(`Undefined property ${key}`);
@@ -190,7 +190,7 @@ export abstract class Data extends EventEmitter {
         return this;
     }
 
-    public pick(...keys: string[]): Values {
+    pick(...keys: string[]): Values {
         const columns = this.getColumns();
         let values = Map() as Values;
 
@@ -203,7 +203,7 @@ export abstract class Data extends EventEmitter {
         return values;
     }
 
-    public getValues(): Values {
+    getValues(): Values {
         let values = Map() as Values;
 
         this.getColumns().forEach((column, key) => {
@@ -213,7 +213,7 @@ export abstract class Data extends EventEmitter {
         return values;
     }
 
-    public merge(values: object, strict: boolean = false): this {
+    merge(values: object, strict: boolean = false): this {
         const columns = this.getColumns();
 
         for (const key of Object.keys(values)) {
@@ -239,7 +239,7 @@ export abstract class Data extends EventEmitter {
         return this;
     }
 
-    public async save(): Promise<this> {
+    async save(): Promise<this> {
         this.validate();
 
         await getMapperOf(this).save(this);
@@ -247,13 +247,13 @@ export abstract class Data extends EventEmitter {
         return this;
     }
 
-    public async destroy(): Promise<this> {
+    async destroy(): Promise<this> {
         await getMapperOf(this).destroy(this);
 
         return this;
     }
 
-    public validate(): void {
+    validate(): void {
         const isFresh = this.isFresh();
 
         this.getColumns().forEach((column, key) => {

@@ -9,9 +9,19 @@
             true,
             10
         ],
+        "member-access": false,
+        "newline-before-return": true,
         "no-empty": false,
         "no-string-literal": false,
+        "no-string-throw": true,
         "object-literal-shorthand": false,
-        "object-literal-sort-keys": false
+        "object-literal-sort-keys": false,
+        "trailing-comma": [
+            true,
+            {
+                "multiline": "always",
+                "singleline": "never"
+            }
+        ]
     }
 }

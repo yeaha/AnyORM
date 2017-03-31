@@ -42,27 +42,27 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
 (() => {
     class FooData extends AnyORM.Data {
-        public static mapper = Mapper;
-        public static mapperService = "foo.service";
-        public static mapperCollection = "foo.collection";
+        static mapper = Mapper;
+        static mapperService = "foo.service";
+        static mapperCollection = "foo.collection";
 
         @AnyORM.PrimaryColumn("uuid")
-        public foo_id: string;
+        foo_id: string;
 
         @AnyORM.Column("string")
-        public foo: string;
+        foo: string;
     }
 
     class BarData extends AnyORM.Data {
-        public static mapper = Mapper;
-        public static mapperService = "bar.service";
-        public static mapperCollection = "bar.collection";
+        static mapper = Mapper;
+        static mapperService = "bar.service";
+        static mapperCollection = "bar.collection";
 
         @AnyORM.PrimaryColumn("uuid")
-        public bar_id: string;
+        bar_id: string;
 
         @AnyORM.Column("string")
-        public bar: string;
+        bar: string;
     }
 
     test("Mapper of Data", (t) => {

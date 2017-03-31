@@ -7,7 +7,7 @@ export let testStorage = Map<any, Map<string, any>>();
 
 export function TestMapper(MapperConstructor: typeof AnyORM.Mapper) {
     return class extends MapperConstructor {
-        public getService(id?: object) {
+        getService(id?: object) {
             return this.options.service;
         }
 

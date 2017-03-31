@@ -33,7 +33,10 @@ export function getMapperOf(target: Data | typeof Data): Mapper {
     options["service"] = constructor.mapperService;
     options["collection"] = constructor.mapperCollection;
 
-    return constructor.mapper = Reflect.construct(mapper, [constructor, constructor.columns, options]);
+    const columns = constructor["columns"];
+    delete constructor["columns"];
+
+    return constructor.mapper = Reflect.construct(mapper, [constructor, columns, options]);
 }
 
 // Data property decorator

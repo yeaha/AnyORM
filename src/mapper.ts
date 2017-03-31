@@ -92,7 +92,7 @@ export abstract class Mapper extends EventEmitter {
         const columns = this.columns;
         let values = Map<string, any>();
 
-        columns.forEach((column: ColumnInterface, key: string) => {
+        columns.forEach((column, key) => {
             if (record.hasOwnProperty(key)) {
                 values.set(key, column.retrieve(record[key]));
             }
@@ -109,7 +109,7 @@ export abstract class Mapper extends EventEmitter {
     public unpack(data: Data): Map<string, any> {
         let record = Map<string, any>();
 
-        data.getValues().forEach((value, key: string) => {
+        data.getValues().forEach((value, key) => {
             if (value !== null) {
                 value = this.getColumn(key).store(value);
             }
@@ -195,7 +195,7 @@ export abstract class Mapper extends EventEmitter {
         let primaryKeys = Map() as Columns;
         this.columns = columns;
 
-        columns.forEach((column: ColumnInterface, key: string) => {
+        columns.forEach((column, key) => {
             const options = column.getOptions();
 
             if (options.primary) {
@@ -256,7 +256,7 @@ export abstract class Mapper extends EventEmitter {
             return result;
         }
 
-        columns.forEach((column: ColumnInterface, key: string) => {
+        columns.forEach((column, key) => {
             if (!id.hasOwnProperty(key)) {
                 throw new UnexpectColumnValueError(`Illegal id value`);
             }

@@ -1,5 +1,5 @@
 import * as EventEmitter from "events";
-import { Map, Set } from "immutable";
+import { is as isSame, Map } from "immutable";
 import { ColumnFactory, ColumnInterface, ColumnOptions } from "./column";
 import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
 import { Columns, Mapper, MapperOptions } from "./mapper";
@@ -69,11 +69,9 @@ export abstract class Data extends EventEmitter {
         return await getMapperOf(this).find(id);
     }
 
-    protected fresh: boolean = true;
+    private current: { fresh: boolean, values: Map<string, any> };
 
-    protected values: Map<string, any> = Map<string, any>();
-
-    private changedColumns: Set<string> = Set<string>();
+    private staged: { fresh: boolean, values: Map<string, any> };
 
     constructor(values: object = {}) {
         super();
@@ -81,9 +79,16 @@ export abstract class Data extends EventEmitter {
         this.initializeProperties();
         this.initializeEvents();
 
+        this.current = {
+            fresh: true,
+            values: Map<string, any>(),
+        };
+
+        this.snapshot();
+
         const columns = getMapperOf(this).getColumns();
 
-        columns.forEach((column: ColumnInterface, key: string) => {
+        columns.forEach((column, key) => {
             const value = values.hasOwnProperty(key)
                 ? values[key]
                 : column.getDefaultValue();
@@ -94,27 +99,35 @@ export abstract class Data extends EventEmitter {
         });
     }
 
-    public __retrieve(values: Map<string, any>): this {
-        values.forEach((value, key: string) => {
-            this.values = this.values.set(key, value);
-        });
+    public rollback(): this {
+        this.current.fresh = this.staged.fresh;
+        this.current.values = this.staged.values;
 
-        this.fresh = false;
-        this.changedColumns = this.changedColumns.clear();
+        return this;
+    }
+
+    public __retrieve(values: Map<string, any>): this {
+        this.current.fresh = false;
+        this.current.values = this.current.values.merge(values);
+
+        this.snapshot();
 
         return this;
     }
 
     public isFresh(): boolean {
-        return this.fresh;
+        return this.current.fresh;
     }
 
     public isDirty(key?: string): boolean {
         if (key === undefined) {
-            return this.changedColumns.size > 0;
+            return !isSame(this.current.values, this.staged.values);
         }
 
-        return this.changedColumns.has(key);
+        return !isSame(
+            this.current.values.get(key),
+            this.staged.values.get(key),
+        );
     }
 
     public hasColumn(key: string): boolean {
@@ -134,7 +147,7 @@ export abstract class Data extends EventEmitter {
     public getIDValues(): object {
         let id = {};
 
-        getMapperOf(this).getPrimaryKeys().forEach((column, key: string) => {
+        getMapperOf(this).getPrimaryKeys().forEach((column, key) => {
             id[key] = this.get(key, column);
         });
 
@@ -150,8 +163,8 @@ export abstract class Data extends EventEmitter {
             column = getMapperOf(this).getColumn(key);
         }
 
-        const value = this.values.has(key)
-            ? this.values.get(key)
+        const value = this.current.values.has(key)
+            ? this.current.values.get(key)
             : column.getDefaultValue();
 
         return column.clone(value);
@@ -168,7 +181,7 @@ export abstract class Data extends EventEmitter {
 
         const options = column.getOptions();
 
-        if (options.refuseUpdate && !this.fresh) {
+        if (options.refuseUpdate && !this.isFresh()) {
             throw new RefuseUpdateColumnError(`${key} refuse update`);
         }
 
@@ -194,7 +207,7 @@ export abstract class Data extends EventEmitter {
         const columns = getMapperOf(this).getColumns();
         let values = Map<string, any>();
 
-        columns.forEach((column: ColumnInterface, key: string) => {
+        columns.forEach((column, key) => {
             values.set(key, this.get(key, column));
         });
 
@@ -212,7 +225,7 @@ export abstract class Data extends EventEmitter {
             const column = columns.get(key) as ColumnInterface;
             const options = column.getOptions();
 
-            if (options.refuseUpdate && !this.fresh) {
+            if (options.refuseUpdate && !this.isFresh()) {
                 continue;
             }
 
@@ -242,21 +255,21 @@ export abstract class Data extends EventEmitter {
 
     public validate(): void {
         const columns = getMapperOf(this).getColumns();
+        const isFresh = this.isFresh();
 
-        let keys = this.isFresh()
-            ? this.values.keySeq()
-            : this.changedColumns.keySeq();
-
-        keys.forEach((key: string) => {
-            const column = columns.get(key) as ColumnInterface;
-            const options = column.getOptions();
-            const value = this.get(key, column);
-
-            if (options.autoGenerate && this.isFresh()) {
+        columns.forEach((column, key) => {
+            if (!isFresh && this.isDirty(key)) {
                 return;
             }
 
+            const options = column.getOptions();
+            const value = this.get(key, column);
+
             if (column.isNull(value)) {
+                if (options.autoGenerate && isFresh) {
+                    return;
+                }
+
                 if (!options.nullable) {
                     throw new UnexpectColumnValueError(`${key} not nullable`);
                 }
@@ -286,7 +299,7 @@ export abstract class Data extends EventEmitter {
     private initializeProperties() {
         let mapper = getMapperOf(this);
 
-        mapper.getColumns().forEach((column: ColumnInterface, key: string) => {
+        mapper.getColumns().forEach((column, key) => {
             Object.defineProperty(this, key, {
                 get: () => {
                     return this.get(key, column);
@@ -312,14 +325,20 @@ export abstract class Data extends EventEmitter {
         this.on(`after:delete`, this.afterDelete.bind(this));
     }
 
+    private snapshot(): void {
+        this.staged = {
+            fresh: this.current.fresh,
+            values: this.current.values,
+        };
+    }
+
     private change(key: string, value, column: ColumnInterface): void {
         value = column.normalize(value);
 
-        if (value !== this.values.get(key)) {
+        if (value !== this.current.values.get(key)) {
             value = column.clone(value);
 
-            this.values = this.values.set(key, value);
-            this.changedColumns = this.changedColumns.add(key);
+            this.current.values = this.current.values.set(key, value);
         }
     }
 }

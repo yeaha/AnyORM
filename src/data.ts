@@ -134,20 +134,18 @@ export abstract class Data extends EventEmitter {
     }
 
     public getID() {
-        let id = this.getIDValues();
+        const id = this.getIDValues();
 
-        if (Object.keys(id).length > 1) {
-            return id;
-        }
-
-        return Object.values(id).shift();
+        return id.size === 1
+            ? id.first()
+            : id;
     }
 
-    public getIDValues(): object {
-        let id = {};
+    public getIDValues(): Values {
+        let id = Map() as Values;
 
         getMapperOf(this).getPrimaryKeys().forEach((column, key) => {
-            id[key] = this.get(key, column);
+            id = id.set(key, this.get(key, column));
         });
 
         return id;

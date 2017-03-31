@@ -12,11 +12,14 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
     class Data extends AnyORM.Data {
         public static mapper = Mapper;
 
-        @AnyORM.Column("integer", { primary: true })
+        @AnyORM.PrimaryColumn("integer")
         public id: number;
 
         @AnyORM.Column("string")
         public foo: string;
+
+        @AnyORM.Column("string")
+        public bar: string;
     }
 
     test("Construct", (t) => {
@@ -27,7 +30,8 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
         t.true(data.hasColumn("id"));
         t.true(data.hasColumn("foo"));
-        t.false(data.hasColumn("bar"));
+        t.true(data.hasColumn("bar"));
+        t.false(data.hasColumn("foobar"));
 
         t.true(AnyORM.getMapperOf(data) instanceof Mapper);
     });
@@ -48,7 +52,44 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
         t.is(data.get("foo"), "FOO");
     });
 
-    test("Import values", (t) => {
+    test("Pick values", (t) => {
+        let data = new Data({
+            foo: "Foo",
+        });
+
+        t.is(data.pick().size, 0);
+
+        const values = data.pick("foo", "bar", "foobar");
+        t.is(values.get("foo"), "Foo");
+        t.is(values.get("bar"), null);
+        t.false(values.has("foobar"));
+    });
+
+    test("Get all values", (t) => {
+        let data = new Data();
+        data.bar = "bar";
+
+        const values = data.getValues();
+
+        t.is(values.size, 3);
+        t.is(values.get("id"), null);
+        t.is(values.get("foo"), null);
+        t.is(values.get("bar"), "bar");
+    });
+
+    test("Merge values", (t) => {
+        let data = new Data();
+
+        data.merge({
+            foo: "foo",
+            foobar: "foobar",
+        });
+
+        t.is(data.foo, "foo");
+        t.true(data.isDirty("foo"));
+    });
+
+    test("Retrieve values", (t) => {
         let data = new Data();
         let values = Map<string, any>();
 

@@ -78,19 +78,16 @@ export abstract class Data extends EventEmitter {
     constructor(values: object = {}) {
         super();
 
-        this.initializeProperties();
-        this.initializeEvents();
-
         this.current = {
             fresh: true,
             values: Map() as Values,
         };
 
+        this.initializeProperties();
+        this.initializeEvents();
         this.snapshot();
 
-        const columns = getMapperOf(this).getColumns();
-
-        columns.forEach((column, key) => {
+        this.getColumns().forEach((column, key) => {
             const value = values.hasOwnProperty(key)
                 ? values[key]
                 : column.getDefaultValue();
@@ -193,7 +190,7 @@ export abstract class Data extends EventEmitter {
     }
 
     public pick(...keys: string[]): Values {
-        const columns = getMapperOf(this).getColumns();
+        const columns = this.getColumns();
         let values = Map() as Values;
 
         for (const key of keys) {
@@ -206,10 +203,9 @@ export abstract class Data extends EventEmitter {
     }
 
     public getValues(): Values {
-        const columns = getMapperOf(this).getColumns();
         let values = Map() as Values;
 
-        columns.forEach((column, key) => {
+        this.getColumns().forEach((column, key) => {
             values = values.set(key, this.get(key, column));
         });
 
@@ -217,14 +213,15 @@ export abstract class Data extends EventEmitter {
     }
 
     public merge(values: object, strict: boolean = false): this {
-        const columns = getMapperOf(this).getColumns();
+        const columns = this.getColumns();
 
         for (const key of Object.keys(values)) {
-            if (!columns.has(key)) {
+            const column = columns.get(key);
+
+            if (column === undefined) {
                 continue;
             }
 
-            const column = columns.get(key) as ColumnInterface;
             const options = column.getOptions();
 
             if (options.refuseUpdate && !this.isFresh()) {
@@ -256,10 +253,9 @@ export abstract class Data extends EventEmitter {
     }
 
     public validate(): void {
-        const columns = getMapperOf(this).getColumns();
         const isFresh = this.isFresh();
 
-        columns.forEach((column, key) => {
+        this.getColumns().forEach((column, key) => {
             if (!isFresh && this.isDirty(key)) {
                 return;
             }
@@ -286,6 +282,10 @@ export abstract class Data extends EventEmitter {
         });
     }
 
+    protected getColumns(): Columns {
+        return getMapperOf(this).getColumns();
+    }
+
     protected beforeSave(): void { }
     protected afterSave(): void { }
 
@@ -299,9 +299,7 @@ export abstract class Data extends EventEmitter {
     protected afterDelete(): void { }
 
     private initializeProperties() {
-        let mapper = getMapperOf(this);
-
-        mapper.getColumns().forEach((column, key) => {
+        this.getColumns().forEach((column, key) => {
             Object.defineProperty(this, key, {
                 get: () => {
                     return this.get(key, column);

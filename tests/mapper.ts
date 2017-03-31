@@ -1,4 +1,5 @@
 import test from "ava";
+import { Map } from "immutable";
 import * as AnyORM from "../src/index";
 import { TestMapper } from "./fixture/mapper";
 
@@ -11,8 +12,8 @@ class Data extends AnyORM.Data {
 }
 
 (() => {
-    let columns: AnyORM.Columns = new Map();
-    columns.set("id", AnyORM.ColumnFactory("numeric", { primary: true }));
+    let columns = Map() as AnyORM.Columns;
+    columns = columns.set("id", AnyORM.ColumnFactory("numeric", { primary: true }));
 
     const options = {
         service: "test.service",

@@ -1,5 +1,7 @@
 import test from "ava";
+import { Map } from "immutable";
 import * as AnyORM from "../src/index";
+import "./fixture/columns";
 import { TestMapper } from "./fixture/mapper";
 
 class Mapper extends TestMapper(AnyORM.Mapper) {
@@ -28,13 +30,6 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
         t.false(data.hasColumn("bar"));
 
         t.true(AnyORM.getMapperOf(data) instanceof Mapper);
-
-        // data = new Data({
-        //     foo: "foo",
-        // }, false);
-
-        // t.false(data.isDirty());
-        // t.false(data.isFresh());
     });
 
     test("Setter & Getter", (t) => {
@@ -53,15 +48,29 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
         t.is(data.get("foo"), "FOO");
     });
 
-    // test("Replace value", (t) => {
-    //     let data = new Data({
-    //         foo: "foo",
-    //     }, false);
+    test("Import values", (t) => {
+        let data = new Data();
+        let values = Map<string, any>();
 
-    //     data.foo = "foo";
-    //     t.false(data.isDirty("foo"));
+        values = values.set("foo", "Foo");
+        data.__import(values);
 
-    //     data.foo = "Foo";
-    //     t.true(data.isDirty("foo"));
-    // });
+        t.false(data.isFresh());
+        t.false(data.isDirty());
+        t.is(data.foo, "Foo");
+    });
+
+    test("Replace value", (t) => {
+        let data = new Data();
+        let values = Map<string, any>();
+
+        values = values.set("foo", "foo");
+        data.__import(values);
+
+        data.foo = "foo";
+        t.false(data.isDirty("foo"));
+
+        data.foo = "Foo";
+        t.true(data.isDirty("foo"));
+    });
 })();

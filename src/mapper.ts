@@ -1,5 +1,5 @@
-// import * as _ from "lodash";
 import * as EventEmitter from "events";
+import { Map } from "immutable";
 import { ColumnInterface } from "./column";
 import { Data } from "./data";
 import { UndefinedColumnError, UnexpectColumnValueError } from "./error";
@@ -17,7 +17,7 @@ export interface MapperOptions {
 export abstract class Mapper extends EventEmitter {
     protected dataConstructor: typeof Data;
     protected columns: Columns;
-    protected primaryKeys: Columns = new Map();
+    protected primaryKeys: Columns;
     protected options: MapperOptions;
 
     constructor(dataConstructor: typeof Data, columns: Columns, options?: object | MapperOptions) {
@@ -90,9 +90,9 @@ export abstract class Mapper extends EventEmitter {
 
     public pack(record: object, data?: Data): Data {
         const columns = this.columns;
-        let values = new Map<string, any>();
+        let values = Map<string, any>();
 
-        columns.forEach((column, key) => {
+        columns.forEach((column: ColumnInterface, key: string) => {
             if (record.hasOwnProperty(key)) {
                 values.set(key, column.retrieve(record[key]));
             }
@@ -107,9 +107,9 @@ export abstract class Mapper extends EventEmitter {
     }
 
     public unpack(data: Data): Map<string, any> {
-        let record = new Map();
+        let record = Map<string, any>();
 
-        data.getValues().forEach((value, key) => {
+        data.getValues().forEach((value, key: string) => {
             if (value !== null) {
                 value = this.getColumn(key).store(value);
             }
@@ -192,20 +192,21 @@ export abstract class Mapper extends EventEmitter {
     }
 
     protected setColumns(columns: Columns): this {
+        let primaryKeys = Map() as Columns;
         this.columns = columns;
-        this.primaryKeys.clear();
 
-        columns.forEach((column, key) => {
+        columns.forEach((column: ColumnInterface, key: string) => {
             const options = column.getOptions();
 
             if (options.primary) {
-                this.primaryKeys.set(key, column);
+                primaryKeys = primaryKeys.set(key, column);
             }
         });
 
-        if (!this.primaryKeys.size) {
+        if (!primaryKeys.size) {
             throw new Error();
         }
+        this.primaryKeys = primaryKeys;
 
         return this;
     }
@@ -255,7 +256,7 @@ export abstract class Mapper extends EventEmitter {
             return result;
         }
 
-        columns.forEach((column, key) => {
+        columns.forEach((column: ColumnInterface, key: string) => {
             if (!id.hasOwnProperty(key)) {
                 throw new UnexpectColumnValueError(`Illegal id value`);
             }

@@ -1,7 +1,9 @@
+import { Map } from "immutable";
 import * as _ from "lodash";
 import * as AnyORM from "../../src/index";
+import { Serial } from "./columns";
 
-let storage = new Map<any, object>();
+export let testStorage = Map<any, Map<string, any>>();
 
 export function TestMapper(MapperConstructor: typeof AnyORM.Mapper) {
     return class extends MapperConstructor {
@@ -11,7 +13,7 @@ export function TestMapper(MapperConstructor: typeof AnyORM.Mapper) {
 
         protected async doFind(id: object, service?: object, collection?: string): Promise<object | null> {
             const key = this.getIndexKey(id);
-            let record = storage.get(key);
+            let record = testStorage.get(key);
 
             if (record === undefined) {
                 return null;
@@ -21,9 +23,18 @@ export function TestMapper(MapperConstructor: typeof AnyORM.Mapper) {
         }
 
         protected async doInsert(data: AnyORM.Data, service?: object, collection?: string): Promise<object> {
-            // const key = this.getIndexKey(data.getIDValues());
+            this.primaryKeys.forEach((column, key: string) => {
+                if (column instanceof Serial) {
+                    data.set(key, column.getNext());
+                }
+            });
 
-            return {};
+            const key = this.getIndexKey(data.getIDValues());
+            let record = this.unpack(data);
+
+            testStorage = testStorage.set(key, record);
+
+            return record;
         }
 
         protected async doUpdate(data: AnyORM.Data, service?: object, collection?: string): Promise<object> {
@@ -44,5 +55,5 @@ export function TestMapper(MapperConstructor: typeof AnyORM.Mapper) {
 
             return result.join("&");
         }
-    }
+    };
 }

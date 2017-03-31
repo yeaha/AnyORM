@@ -1,4 +1,5 @@
 import * as EventEmitter from "events";
+import { Map, Set } from "immutable";
 import { ColumnFactory, ColumnInterface, ColumnOptions } from "./column";
 import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
 import { Columns, Mapper, MapperOptions } from "./mapper";
@@ -39,7 +40,7 @@ export function Column(type: string, options?: object | ColumnOptions) {
         const column = ColumnFactory(type, options);
 
         let constructor: Function = Object.getPrototypeOf(target).constructor;
-        constructor["columns"].set(propertyKey, column);
+        constructor["columns"] = constructor["columns"].set(propertyKey, column);
     };
 }
 
@@ -62,7 +63,7 @@ export abstract class Data extends EventEmitter {
 
     public static mapperOptions?: object | MapperOptions;
 
-    public static columns: Columns = new Map();
+    public static columns: Columns = Map() as Columns;
 
     public static async find(id): Promise<Data | null> {
         return await getMapperOf(this).find(id);
@@ -70,9 +71,9 @@ export abstract class Data extends EventEmitter {
 
     protected fresh: boolean = true;
 
-    protected values: Map<string, any> = new Map();
+    protected values: Map<string, any> = Map<string, any>();
 
-    private changedColumns: Set<string> = new Set();
+    private changedColumns: Set<string> = Set<string>();
 
     constructor(values: object = {}) {
         super();
@@ -82,7 +83,7 @@ export abstract class Data extends EventEmitter {
 
         const columns = getMapperOf(this).getColumns();
 
-        columns.forEach((column, key) => {
+        columns.forEach((column: ColumnInterface, key: string) => {
             const value = values.hasOwnProperty(key)
                 ? values[key]
                 : column.getDefaultValue();
@@ -94,12 +95,12 @@ export abstract class Data extends EventEmitter {
     }
 
     public __import(values: Map<string, any>): this {
-        values.forEach((value, key) => {
-            this.values.set(key, value);
+        values.forEach((value, key: string) => {
+            this.values = this.values.set(key, value);
         });
 
         this.fresh = false;
-        this.changedColumns.clear();
+        this.changedColumns = this.changedColumns.clear();
 
         return this;
     }
@@ -133,7 +134,7 @@ export abstract class Data extends EventEmitter {
     public getIDValues(): object {
         let id = {};
 
-        getMapperOf(this).getPrimaryKeys().forEach((column, key) => {
+        getMapperOf(this).getPrimaryKeys().forEach((column, key: string) => {
             id[key] = this.get(key, column);
         });
 
@@ -178,7 +179,7 @@ export abstract class Data extends EventEmitter {
 
     public pick(...keys: string[]): Map<string, any> {
         const columns = getMapperOf(this).getColumns();
-        let values = new Map<string, any>();
+        let values = Map<string, any>();
 
         for (const key of keys) {
             if (columns.has(key)) {
@@ -191,9 +192,9 @@ export abstract class Data extends EventEmitter {
 
     public getValues(): Map<string, any> {
         const columns = getMapperOf(this).getColumns();
-        let values = new Map<string, any>();
+        let values = Map<string, any>();
 
-        columns.forEach((column, key) => {
+        columns.forEach((column: ColumnInterface, key: string) => {
             values.set(key, this.get(key, column));
         });
 
@@ -243,16 +244,16 @@ export abstract class Data extends EventEmitter {
         const columns = getMapperOf(this).getColumns();
 
         let keys = this.isFresh()
-            ? this.values.keys()
-            : this.changedColumns.keys();
+            ? this.values.keySeq()
+            : this.changedColumns.keySeq();
 
-        for (const key of keys) {
+        keys.forEach((key: string) => {
             const column = columns.get(key) as ColumnInterface;
             const options = column.getOptions();
             const value = this.get(key, column);
 
             if (options.autoGenerate && this.isFresh()) {
-                continue;
+                return;
             }
 
             if (column.isNull(value)) {
@@ -267,7 +268,7 @@ export abstract class Data extends EventEmitter {
             }
 
             column.validate(value);
-        }
+        });
     }
 
     protected beforeSave(): void { }
@@ -285,7 +286,7 @@ export abstract class Data extends EventEmitter {
     private initializeProperties() {
         let mapper = getMapperOf(this);
 
-        mapper.getColumns().forEach((column, key) => {
+        mapper.getColumns().forEach((column: ColumnInterface, key: string) => {
             Object.defineProperty(this, key, {
                 get: () => {
                     return this.get(key, column);
@@ -317,8 +318,8 @@ export abstract class Data extends EventEmitter {
         if (value !== this.values.get(key)) {
             value = column.clone(value);
 
-            this.values.set(key, value);
-            this.changedColumns.add(key);
+            this.values = this.values.set(key, value);
+            this.changedColumns = this.changedColumns.add(key);
         }
     }
 }

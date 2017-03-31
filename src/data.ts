@@ -4,6 +4,8 @@ import { ColumnFactory, ColumnInterface, ColumnOptions } from "./column";
 import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
 import { Columns, Mapper, MapperOptions } from "./mapper";
 
+export type Values = Map<string, any>;
+
 export function getMapperOf(target: Data | typeof Data): Mapper {
     let constructor: typeof Data;
 
@@ -69,9 +71,9 @@ export abstract class Data extends EventEmitter {
         return await getMapperOf(this).find(id);
     }
 
-    private current: { fresh: boolean, values: Map<string, any> };
+    private current: { fresh: boolean, values: Values };
 
-    private staged: { fresh: boolean, values: Map<string, any> };
+    private staged: { fresh: boolean, values: Values };
 
     constructor(values: object = {}) {
         super();
@@ -81,7 +83,7 @@ export abstract class Data extends EventEmitter {
 
         this.current = {
             fresh: true,
-            values: Map<string, any>(),
+            values: Map() as Values,
         };
 
         this.snapshot();
@@ -99,18 +101,18 @@ export abstract class Data extends EventEmitter {
         });
     }
 
-    public rollback(): this {
-        this.current.fresh = this.staged.fresh;
-        this.current.values = this.staged.values;
-
-        return this;
-    }
-
-    public __retrieve(values: Map<string, any>): this {
+    public __retrieve(values: Values): this {
         this.current.fresh = false;
         this.current.values = this.current.values.merge(values);
 
         this.snapshot();
+
+        return this;
+    }
+
+    public rollback(): this {
+        this.current.fresh = this.staged.fresh;
+        this.current.values = this.staged.values;
 
         return this;
     }
@@ -190,9 +192,9 @@ export abstract class Data extends EventEmitter {
         return this;
     }
 
-    public pick(...keys: string[]): Map<string, any> {
+    public pick(...keys: string[]): Values {
         const columns = getMapperOf(this).getColumns();
-        let values = Map<string, any>();
+        let values = Map() as Values;
 
         for (const key of keys) {
             if (columns.has(key)) {
@@ -203,9 +205,9 @@ export abstract class Data extends EventEmitter {
         return values;
     }
 
-    public getValues(): Map<string, any> {
+    public getValues(): Values {
         const columns = getMapperOf(this).getColumns();
-        let values = Map<string, any>();
+        let values = Map() as Values;
 
         columns.forEach((column, key) => {
             values.set(key, this.get(key, column));

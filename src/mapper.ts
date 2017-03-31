@@ -1,7 +1,7 @@
 import * as EventEmitter from "events";
 import { Map } from "immutable";
 import { ColumnInterface } from "./column";
-import { Data } from "./data";
+import { Data, Values } from "./data";
 import { UndefinedColumnError, UnexpectColumnValueError } from "./error";
 
 export type Columns = Map<string, ColumnInterface>;
@@ -90,7 +90,7 @@ export abstract class Mapper extends EventEmitter {
 
     public pack(record: object, data?: Data): Data {
         const columns = this.columns;
-        let values = Map<string, any>();
+        let values = Map() as Values;
 
         columns.forEach((column, key) => {
             if (record.hasOwnProperty(key)) {
@@ -106,8 +106,8 @@ export abstract class Mapper extends EventEmitter {
         return data;
     }
 
-    public unpack(data: Data): Map<string, any> {
-        let record = Map<string, any>();
+    public unpack(data: Data): Values {
+        let record = Map() as Values;
 
         data.getValues().forEach((value, key) => {
             if (value !== null) {

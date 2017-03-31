@@ -32,11 +32,11 @@ export interface ColumnInterface {
 
 let constructors = new Map<string, ColumnConstructor>();
 
-export function ColumnRegister(type: string, constructor: ColumnConstructor) {
+export function columnRegister(type: string, constructor: ColumnConstructor) {
     constructors.set(type, constructor);
 }
 
-export function ColumnFactory(type: string, options?: object | ColumnOptions): ColumnInterface {
+export function columnFactory(type: string, options?: object | ColumnOptions): ColumnInterface {
     if (!constructors.has(type)) {
         type = "any";
     }
@@ -201,8 +201,8 @@ export class UUIDColumn extends TextColumn {
     }
 }
 
-ColumnRegister("any", AnyColumn);
-ColumnRegister("numeric", NumericColumn);
-ColumnRegister("integer", IntegerColumn);
-ColumnRegister("text", TextColumn);
-ColumnRegister("uuid", UUIDColumn);
+columnRegister("any", AnyColumn);
+columnRegister("numeric", NumericColumn);
+columnRegister("integer", IntegerColumn);
+columnRegister("text", TextColumn);
+columnRegister("uuid", UUIDColumn);

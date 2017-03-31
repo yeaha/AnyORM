@@ -2,7 +2,7 @@ import test from "ava";
 import * as AnyORM from "../src/index";
 
 test("normalize options", (t) => {
-    const column: AnyORM.ColumnInterface = AnyORM.ColumnFactory("any");
+    const column: AnyORM.ColumnInterface = AnyORM.columnFactory("any");
     const options = column.getOptions();
 
     t.is(options.nullable, false);
@@ -14,7 +14,7 @@ test("normalize options", (t) => {
 });
 
 test("normalize primary options", (t) => {
-    const column = AnyORM.ColumnFactory("any", { primary: true });
+    const column = AnyORM.columnFactory("any", { primary: true });
     const options = column.getOptions();
 
     t.is(options.primary, true);
@@ -23,17 +23,17 @@ test("normalize primary options", (t) => {
 });
 
 test("ColumnFactory", (t) => {
-    const ColumnFactory = AnyORM.ColumnFactory;
+    const columnFactory = AnyORM.columnFactory;
 
-    t.true(ColumnFactory("foobar") instanceof AnyORM.AnyColumn);
-    t.true(ColumnFactory("numeric") instanceof AnyORM.NumericColumn);
-    t.true(ColumnFactory("integer") instanceof AnyORM.IntegerColumn);
-    t.true(ColumnFactory("text") instanceof AnyORM.TextColumn);
+    t.true(columnFactory("foobar") instanceof AnyORM.AnyColumn);
+    t.true(columnFactory("numeric") instanceof AnyORM.NumericColumn);
+    t.true(columnFactory("integer") instanceof AnyORM.IntegerColumn);
+    t.true(columnFactory("text") instanceof AnyORM.TextColumn);
 });
 
 // Numeric type
 (() => {
-    const column = AnyORM.ColumnFactory("numeric");
+    const column = AnyORM.columnFactory("numeric");
 
     test("NumericColumn.normalize()", (t) => {
         t.is(column.normalize(1.23), 1.23);
@@ -67,19 +67,19 @@ test("ColumnFactory", (t) => {
 // UUID Type
 (() => {
     test("UUID auto generator", (t) => {
-        const column = AnyORM.ColumnFactory("uuid", { autoGenerate: true });
+        const column = AnyORM.columnFactory("uuid", { autoGenerate: true });
 
         t.regex(column.getDefaultValue(), /^[0-9a-f\-]{36}$/);
     });
 
     test("UUID upperCase option", (t) => {
-        const column = AnyORM.ColumnFactory("uuid", { upperCase: true }) as AnyORM.UUIDColumn;
+        const column = AnyORM.columnFactory("uuid", { upperCase: true }) as AnyORM.UUIDColumn;
 
         t.regex(column.generate(), /^[0-9A-Z\-]{36}$/);
     });
 
     test("UUID as primary key", (t) => {
-        const column = AnyORM.ColumnFactory("uuid", { primary: true });
+        const column = AnyORM.columnFactory("uuid", { primary: true });
 
         t.regex(column.getDefaultValue(), /^[0-9a-f\-]{36}$/);
     });

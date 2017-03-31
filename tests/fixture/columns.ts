@@ -8,4 +8,4 @@ export class Serial extends AnyORM.IntegerColumn {
     }
 }
 
-AnyORM.ColumnRegister("serial", Serial);
+AnyORM.columnRegister("serial", Serial);

@@ -13,7 +13,7 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
     }
 
     let columns = Map() as AnyORM.Columns;
-    columns = columns.set("id", AnyORM.ColumnFactory("numeric", { primary: true }));
+    columns = columns.set("id", AnyORM.columnFactory("numeric", { primary: true }));
 
     const options = {
         service: "test.service",

@@ -40,8 +40,8 @@ export function getMapperOf(target: Data | typeof Data): Mapper {
 export function Column(type: string, options?: object | ColumnOptions) {
     return (target: Data, propertyKey: string) => {
         const column = ColumnFactory(type, options);
+        const constructor = target["constructor"];
 
-        let constructor: Function = Object.getPrototypeOf(target).constructor;
         constructor["columns"] = constructor["columns"].set(propertyKey, column);
     };
 }

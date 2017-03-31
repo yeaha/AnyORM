@@ -115,3 +115,40 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
         t.true(data.isDirty("foo"));
     });
 })();
+
+(() => {
+    class SinglePKData extends AnyORM.Data {
+        public static mapper = Mapper;
+
+        @AnyORM.PrimaryColumn("uuid")
+        public id: string;
+    }
+
+    class MultiplePKData extends AnyORM.Data {
+        public static mapper = Mapper;
+
+        @AnyORM.PrimaryColumn("uuid")
+        public foo_id: string;
+
+        @AnyORM.PrimaryColumn("uuid")
+        public bar_id: string;
+    }
+
+    test("Get id", (t) => {
+        const sdata = new SinglePKData();
+        const mdata = new MultiplePKData();
+
+        const sid = sdata.getIDValues();
+        const mid = mdata.getIDValues();
+
+        t.is(sid.size, 1);
+        t.true(sid.has(`id`));
+
+        t.is(mid.size, 2);
+        t.true(mid.has(`foo_id`));
+        t.true(mid.has(`bar_id`));
+
+        t.true(typeof sdata.getID() === `string`);
+        t.true(mid.equals(mdata.getID()));
+    });
+})();

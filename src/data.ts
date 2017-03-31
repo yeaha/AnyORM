@@ -198,7 +198,7 @@ export abstract class Data extends EventEmitter {
 
         for (const key of keys) {
             if (columns.has(key)) {
-                values.set(key, this.get(key));
+                values = values.set(key, this.get(key));
             }
         }
 
@@ -210,7 +210,7 @@ export abstract class Data extends EventEmitter {
         let values = Map() as Values;
 
         columns.forEach((column, key) => {
-            values.set(key, this.get(key, column));
+            values = values.set(key, this.get(key, column));
         });
 
         return values;
@@ -337,7 +337,7 @@ export abstract class Data extends EventEmitter {
     private change(key: string, value, column: ColumnInterface): void {
         value = column.normalize(value);
 
-        if (value !== this.current.values.get(key)) {
+        if (!isSame(value, this.current.values.get(key))) {
             value = column.clone(value);
 
             this.current.values = this.current.values.set(key, value);

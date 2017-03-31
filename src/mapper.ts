@@ -101,7 +101,7 @@ export abstract class Mapper extends EventEmitter {
         if (data === undefined) {
             data = Reflect.construct(this.dataConstructor, []) as Data;
         }
-        data.__import(values);
+        data.__retrieve(values);
 
         return data;
     }

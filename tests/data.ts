@@ -53,7 +53,7 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
         let values = Map<string, any>();
 
         values = values.set("foo", "Foo");
-        data.__import(values);
+        data.__retrieve(values);
 
         t.false(data.isFresh());
         t.false(data.isDirty());
@@ -65,7 +65,7 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
         let values = Map<string, any>();
 
         values = values.set("foo", "foo");
-        data.__import(values);
+        data.__retrieve(values);
 
         data.foo = "foo";
         t.false(data.isDirty("foo"));

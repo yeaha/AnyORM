@@ -94,7 +94,7 @@ export abstract class Data extends EventEmitter {
         });
     }
 
-    public __import(values: Map<string, any>): this {
+    public __retrieve(values: Map<string, any>): this {
         values.forEach((value, key: string) => {
             this.values = this.values.set(key, value);
         });

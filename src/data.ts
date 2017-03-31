@@ -74,19 +74,23 @@ export abstract class Data extends EventEmitter {
 
     private changedColumns: Set<string> = new Set();
 
-    constructor(values?: object) {
+    constructor(values: object = {}) {
         super();
 
         this.initializeProperties();
         this.initializeEvents();
 
-        if (values !== undefined) {
-            getMapperOf(this).getColumns().forEach((column, key) => {
-                if (values.hasOwnProperty(key)) {
-                    this.set(key, values[key], column);
-                }
-            });
-        }
+        const columns = getMapperOf(this).getColumns();
+
+        columns.forEach((column, key) => {
+            const value = values.hasOwnProperty(key)
+                ? values[key]
+                : column.getDefaultValue();
+
+            if (value !== null) {
+                this.set(key, value, column);
+            }
+        });
     }
 
     public __import(values: Map<string, any>): this {

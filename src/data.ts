@@ -1,7 +1,6 @@
-import * as EventEmitter from "events";
-import { is as isSame, Map } from "immutable";
+import { is as isSame, Map, OrderedMap } from "immutable";
 import { columnFactory, ColumnInterface, ColumnOptions } from "./column";
-import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
+import { DataNotFoundError, RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
 import { Columns, Mapper, MapperOptions } from "./mapper";
 
 export type Values = Map<string, any>;
@@ -59,7 +58,7 @@ export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
     return Column(type, options);
 }
 
-export abstract class Data extends EventEmitter {
+export abstract class Data {
     static mapper: Mapper | typeof Mapper;
 
     static mapperService: string = "";
@@ -74,20 +73,27 @@ export abstract class Data extends EventEmitter {
         return await getMapperOf(this).find(id);
     }
 
+    static async findOrFail(id): Promise<Data> {
+        const data = await this.find(id);
+
+        if (data === null) {
+            throw new DataNotFoundError(`Data not found`);
+        }
+
+        return data;
+    }
+
     private current: { fresh: boolean, values: Values };
 
     private staged: { fresh: boolean, values: Values };
 
     constructor(values: object = {}) {
-        super();
-
         this.current = {
             fresh: true,
             values: Map() as Values,
         };
 
         this.initializeProperties();
-        this.initializeEvents();
         this.snapshot();
 
         this.getColumns().forEach((column, key) => {
@@ -100,6 +106,18 @@ export abstract class Data extends EventEmitter {
             }
         });
     }
+
+    async __beforeSave() { }
+    async __afterSave() { }
+
+    async __beforeInsert() { }
+    async __afterInsert() { }
+
+    async __beforeUpdate() { }
+    async __afterUpdate() { }
+
+    async __beforeDelete() { }
+    async __afterDelete() { }
 
     __retrieve(values: Values): this {
         this.current.fresh = false;
@@ -145,7 +163,7 @@ export abstract class Data extends EventEmitter {
     }
 
     getIDValues(): Values {
-        let id = Map() as Values;
+        let id = OrderedMap() as Values;
 
         getMapperOf(this).getPrimaryKeys().forEach((column, key) => {
             id = id.set(key, this.get(key, column));
@@ -287,18 +305,6 @@ export abstract class Data extends EventEmitter {
         return getMapperOf(this).getColumns();
     }
 
-    protected beforeSave(): void { }
-    protected afterSave(): void { }
-
-    protected beforeInsert(): void { }
-    protected afterInsert(): void { }
-
-    protected beforeUpdate(): void { }
-    protected afterUpdate(): void { }
-
-    protected beforeDelete(): void { }
-    protected afterDelete(): void { }
-
     private initializeProperties() {
         this.getColumns().forEach((column, key) => {
             Object.defineProperty(this, key, {
@@ -310,20 +316,6 @@ export abstract class Data extends EventEmitter {
                 },
             });
         });
-    }
-
-    private initializeEvents() {
-        this.on(`before:save`, this.beforeSave.bind(this));
-        this.on(`after:save`, this.afterSave.bind(this));
-
-        this.on(`before:insert`, this.beforeInsert.bind(this));
-        this.on(`after:insert`, this.afterInsert.bind(this));
-
-        this.on(`before:update`, this.beforeUpdate.bind(this));
-        this.on(`after:update`, this.afterUpdate.bind(this));
-
-        this.on(`before:delete`, this.beforeDelete.bind(this));
-        this.on(`after:delete`, this.afterDelete.bind(this));
     }
 
     private snapshot(): void {

@@ -14,6 +14,31 @@ export interface MapperOptions {
     [key: string]: any;
 }
 
+export enum CRUDType { Find, Insert, Update, Delete };
+
+interface CRUDCommand {
+    type: CRUDType;
+    service: string;
+    collection: string;
+}
+
+export interface FindCommand extends CRUDCommand {
+    id: Values;
+}
+
+export interface InsertCommand extends CRUDCommand {
+    record: Values;
+}
+
+export interface UpdateCommand extends CRUDCommand {
+    id: Values;
+    record: Values;
+}
+
+export interface DeleteCommand extends CRUDCommand {
+    id: Values;
+}
+
 export abstract class Mapper extends EventEmitter {
     protected dataConstructor: typeof Data;
     protected columns: Columns;
@@ -48,7 +73,7 @@ export abstract class Mapper extends EventEmitter {
         return this.options.hasOwnProperty(key);
     }
 
-    getOptions(): object {
+    getOptions(): MapperOptions {
         return this.options;
     }
 
@@ -60,7 +85,13 @@ export abstract class Mapper extends EventEmitter {
         return this.options[key];
     }
 
-    getCollection(id?: object): string {
+    getService(id?: Values): string {
+        const service = this.options.service;
+
+        return service;
+    }
+
+    getCollection(id?: Values): string {
         const collection = this.options.collection;
 
         return collection;
@@ -94,7 +125,7 @@ export abstract class Mapper extends EventEmitter {
 
         columns.forEach((column, key) => {
             if (record.hasOwnProperty(key)) {
-                values.set(key, column.retrieve(record[key]));
+                values = values.set(key, column.retrieve(record[key]));
             }
         });
 
@@ -114,16 +145,67 @@ export abstract class Mapper extends EventEmitter {
                 value = this.getColumn(key).store(value);
             }
 
-            record.set(key, value);
+            record = record.set(key, value);
         });
 
         return record;
     }
 
-    async find(id): Promise<Data | null> {
-        id = this.normalizeID(id);
+    buildFindCommand(id: Values): FindCommand {
+        const cmd: FindCommand = {
+            type: CRUDType.Find,
+            service: this.getService(id),
+            collection: this.getCollection(id),
+            id: id,
+        };
 
-        const record = await this.doFind(id);
+        return cmd;
+    }
+
+    buildInsertCommand(data: Data): InsertCommand {
+        const id = data.getIDValues();
+
+        const cmd: InsertCommand = {
+            type: CRUDType.Insert,
+            service: this.getService(id),
+            collection: this.getCollection(id),
+            record: this.unpack(data),
+        };
+
+        return cmd;
+    };
+
+    buildUpdateCommand(data: Data): UpdateCommand {
+        const id = data.getIDValues();
+
+        const cmd: UpdateCommand = {
+            type: CRUDType.Update,
+            service: this.getService(id),
+            collection: this.getCollection(id),
+            record: this.unpack(data),
+            id: id,
+        };
+
+        return cmd;
+    }
+
+    buildDeleteCommand(data: Data): DeleteCommand {
+        const id = data.getIDValues();
+
+        const cmd: DeleteCommand = {
+            type: CRUDType.Delete,
+            service: this.getService(id),
+            collection: this.getCollection(id),
+            id: id,
+        };
+
+        return cmd;
+    }
+
+    async find(id): Promise<Data | null> {
+        const cmd = this.buildFindCommand(this.normalizeID(id));
+        const record = await this.doFind(cmd);
+
         if (record === null) {
             return null;
         }
@@ -136,7 +218,9 @@ export abstract class Mapper extends EventEmitter {
             return data;
         }
 
-        const record = await this.doFind(data.getIDValues());
+        const cmd = this.buildFindCommand(data.getIDValues());
+        const record = await this.doFind(cmd);
+
         if (record === null) {
             throw new Error();
         }
@@ -153,7 +237,8 @@ export abstract class Mapper extends EventEmitter {
             return data;
         }
 
-        data.emit(`before:save`);
+        await data.__beforeSave();
+
         this.emit(`before:save`, data);
 
         if (data.isFresh()) {
@@ -162,7 +247,8 @@ export abstract class Mapper extends EventEmitter {
             await this.update(data);
         }
 
-        data.emit(`after:save`);
+        await data.__afterSave();
+
         this.emit(`after:save`, data);
 
         return data;
@@ -177,15 +263,19 @@ export abstract class Mapper extends EventEmitter {
             return true;
         }
 
-        data.emit(`before:delete`);
+        await data.__beforeDelete();
+
         this.emit(`before:delete`, data);
 
-        const result = await this.doDelete(data);
+        const cmd = this.buildDeleteCommand(data);
+        const result = await this.doDelete(cmd);
+
         if (result === false) {
             throw new Error();
         }
 
-        data.emit(`after:delete`);
+        await data.__afterDelete();
+
         this.emit(`after:delete`, data);
 
         return result;
@@ -212,46 +302,53 @@ export abstract class Mapper extends EventEmitter {
     }
 
     protected async insert(data: Data): Promise<Data> {
-        data.emit(`before:insert`);
+        await data.__beforeInsert();
+
         data.validate();
         this.emit(`before:insert`, data);
 
-        const record = await this.doInsert(data);
+        const cmd = this.buildInsertCommand(data);
+        const record = await this.doInsert(cmd);
+
         data = this.pack(record, data);
 
-        data.emit(`after:insert`);
+        await data.__afterInsert();
+
         this.emit(`after:insert`, data);
 
         return data;
     }
 
     protected async update(data: Data): Promise<Data> {
-        data.emit(`before:update`);
+        await data.__beforeUpdate();
+
         data.validate();
         this.emit(`before:update`, data);
 
-        const record = await this.doUpdate(data);
+        const cmd = this.buildUpdateCommand(data);
+        const record = await this.doUpdate(cmd);
+
         data = this.pack(record, data);
 
-        data.emit(`after:update`);
+        await data.__afterUpdate();
+
         this.emit(`after:update`, data);
 
         return data;
     }
 
-    protected abstract getService(id?: object);
-    protected abstract async doFind(id: object, service?: object, collection?: string): Promise<object | null>;
-    protected abstract async doInsert(data: Data, service?: object, collection?: string): Promise<object>;
-    protected abstract async doUpdate(data: Data, service?: object, collection?: string): Promise<object>;
-    protected abstract async doDelete(data: Data, service?: object, collection?: string): Promise<boolean>;
+    protected abstract async doFind(cmd: FindCommand): Promise<object | null>;
+    protected abstract async doInsert(cmd: InsertCommand): Promise<object>;
+    protected abstract async doUpdate(cmd: UpdateCommand): Promise<object>;
+    protected abstract async doDelete(cmd: DeleteCommand): Promise<boolean>;
 
-    private normalizeID(id): object {
+    private normalizeID(id: string | number | object): Values {
         const columns = this.primaryKeys;
-        let result = {};
+        let result = Map() as Values;
 
         if (typeof id !== "object") {
-            const key = columns.keys().next().value;
-            result[key] = id;
+            const key = columns.keySeq().first() as string;
+            result = result.set(key, id);
 
             return result;
         }
@@ -261,7 +358,7 @@ export abstract class Mapper extends EventEmitter {
                 throw new UnexpectColumnValueError(`Illegal id value`);
             }
 
-            result[key] = id[key];
+            result = result.set(key, id[key]);
         });
 
         return result;

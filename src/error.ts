@@ -1,3 +1,11 @@
+export class DataNotFoundError extends Error {
+    constructor(message: string) {
+        super(message);
+
+        Object.setPrototypeOf(this, DataNotFoundError.prototype);
+    }
+}
+
 export class UnexpectColumnValueError extends Error {
     constructor(message: string) {
         super(message);

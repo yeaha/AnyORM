@@ -1,6 +1,7 @@
 import test from "ava";
 import { Map } from "immutable";
 import * as AnyORM from "../src/index";
+import "./fixture/columns";
 import { TestMapper } from "./fixture/mapper";
 
 class Mapper extends TestMapper(AnyORM.Mapper) {
@@ -82,5 +83,59 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
         t.true(barMapper.hasColumn("bar"));
         t.false(barMapper.hasColumn("foo"));
+    });
+})();
+
+(() => {
+    class TestData extends AnyORM.Data {
+        static mapper = Mapper;
+
+        @AnyORM.PrimaryColumn(`serial`)
+        id: number;
+
+        @AnyORM.Column(`string`)
+        foo: string;
+
+        @AnyORM.Column(`string`)
+        bar: string;
+    }
+
+    test.serial("Insert data", async (t) => {
+        const data = new TestData();
+
+        data.foo = "FOO";
+        data.bar = "BAR";
+
+        await data.save();
+
+        t.false(data.isDirty());
+        t.false(data.id === null);
+
+        t.pass();
+    });
+
+    test.serial("Find data", async (t) => {
+        const data = await TestData.findOrFail(1);
+
+        t.is(data.get("foo"), "FOO");
+        t.is(data.get("bar"), "BAR");
+    });
+
+    test.serial("Update data", async (t) => {
+        const data = await TestData.findOrFail(1);
+
+        data.set("foo", "foo");
+
+        await data.save();
+
+        t.false(data.isDirty());
+    });
+
+    test.serial("Delete data", async (t) => {
+        const data = await TestData.findOrFail(1);
+
+        await data.destroy();
+
+        t.is(await TestData.find(1), null);
     });
 })();

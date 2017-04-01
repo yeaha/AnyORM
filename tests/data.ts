@@ -91,7 +91,7 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
     test("Retrieve values", (t) => {
         let data = new Data();
-        let values = Map<string, any>();
+        let values = Map() as AnyORM.Values;
 
         values = values.set("foo", "Foo");
         data.__retrieve(values);
@@ -103,7 +103,7 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
     test("Replace value", (t) => {
         let data = new Data();
-        let values = Map<string, any>();
+        let values = Map() as AnyORM.Values;
 
         values = values.set("foo", "foo");
         data.__retrieve(values);

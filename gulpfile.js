@@ -2,7 +2,7 @@ const gulp = require("gulp");
 const ts = require("gulp-typescript");
 const _ = require("lodash");
 
-gulp.task("watch", () => {
+gulp.task("compile:watch", () => {
     gulp.watch(["src/**/*.ts", "tests/**/*.ts"], ["compile"]);
 });
 

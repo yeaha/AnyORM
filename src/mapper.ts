@@ -41,13 +41,13 @@ export interface DeleteCommand extends CRUDCommand {
 
 let mappers = Map() as Map<typeof Data, Mapper<Data>>;
 
-export function getMapperOf<D extends Data, M extends Mapper<D>>(target: D | DataConstructor<D>): M {
+export function getMapperOf<T extends Data>(target: T | DataConstructor<T>): Mapper<T> {
     if (target instanceof Data) {
-        target = Object.getPrototypeOf(target).constructor as DataConstructor<D>;
+        target = Object.getPrototypeOf(target).constructor as DataConstructor<T>;
     }
 
     if (mappers.has(target)) {
-        return mappers.get(target) as M;
+        return mappers.get(target) as Mapper<T>;
     }
 
     const mapperConstructor = target.mapper;

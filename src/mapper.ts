@@ -39,11 +39,15 @@ export interface DeleteCommand extends CRUDCommand {
     id: Values;
 }
 
-// let mappers = Map() as Map<typeof Data, Mapper<Data>>;
+let mappers = Map() as Map<typeof Data, Mapper<Data>>;
 
 export function getMapperOf<D extends Data, M extends Mapper<D>>(target: D | DataConstructor<D>): M {
     if (target instanceof Data) {
         target = Object.getPrototypeOf(target).constructor as DataConstructor<D>;
+    }
+
+    if (mappers.has(target)) {
+        return mappers.get(target) as M;
     }
 
     const mapperConstructor = target.mapper;
@@ -52,7 +56,11 @@ export function getMapperOf<D extends Data, M extends Mapper<D>>(target: D | Dat
     options[`service`] = target.mapperService;
     options[`collection`] = target.mapperCollection;
 
-    return Reflect.construct(mapperConstructor, [target, columns, options]);
+    const mapper = Reflect.construct(mapperConstructor, [target, columns, options]);
+
+    mappers = mappers.set(target, mapper);
+
+    return mapper;
 }
 
 export abstract class Mapper<T extends Data> extends EventEmitter {

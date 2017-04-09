@@ -1,41 +1,18 @@
 import { is as isSame, Map, OrderedMap } from "immutable";
 import { columnFactory, ColumnInterface, ColumnOptions } from "./column";
-import { DataNotFoundError, RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
-import { Columns, Mapper, MapperOptions } from "./mapper";
+import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
+import { Columns, getMapperOf, Mapper, MapperOptions } from "./mapper";
 
 export type Values = Map<string, any>;
 
-export function getMapperOf(target: Data | typeof Data): Mapper {
-    let constructor: typeof Data;
+export interface DataConstructor<T extends Data> {
+    mapper: typeof Mapper;
+    mapperService: string;
+    mapperCollection: string;
+    mapperOptions?: object | MapperOptions;
+    columns: Columns;
 
-    if (target instanceof Data) {
-        constructor = Object.getPrototypeOf(target).constructor;
-    } else {
-        constructor = target;
-    }
-
-    let mapper = constructor.mapper;
-
-    if (mapper === undefined) {
-        throw new Error(`MapperConstructor is undefined`);
-    }
-
-    if (mapper instanceof Mapper) {
-        return mapper;
-    }
-
-    let options = constructor.mapperOptions;
-    if (options === undefined) {
-        options = {};
-    }
-
-    options["service"] = constructor.mapperService;
-    options["collection"] = constructor.mapperCollection;
-
-    const columns = constructor["columns"];
-    delete constructor["columns"];
-
-    return constructor.mapper = Reflect.construct(mapper, [constructor, columns, options]);
+    new (values?: object): T;
 }
 
 // Data property decorator
@@ -59,7 +36,7 @@ export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
 }
 
 export abstract class Data {
-    static mapper: Mapper | typeof Mapper;
+    static mapper: typeof Mapper;
 
     static mapperService: string = "";
 
@@ -68,20 +45,6 @@ export abstract class Data {
     static mapperOptions?: object | MapperOptions;
 
     static columns: Columns = Map() as Columns;
-
-    static async find(id): Promise<Data | null> {
-        return await getMapperOf(this).find(id);
-    }
-
-    static async findOrFail(id): Promise<Data> {
-        const data = await this.find(id);
-
-        if (data === null) {
-            throw new DataNotFoundError(`Data not found`);
-        }
-
-        return data;
-    }
 
     private current: { fresh: boolean, values: Values };
 

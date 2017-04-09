@@ -1,8 +1,8 @@
 import * as EventEmitter from "events";
 import { Map } from "immutable";
 import { ColumnInterface } from "./column";
-import { Data, Values } from "./data";
-import { UndefinedColumnError, UnexpectColumnValueError } from "./error";
+import { Data, DataConstructor, Values } from "./data";
+import { DataNotFoundError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
 
 export type Columns = Map<string, ColumnInterface>;
 
@@ -39,13 +39,29 @@ export interface DeleteCommand extends CRUDCommand {
     id: Values;
 }
 
-export abstract class Mapper extends EventEmitter {
-    protected dataConstructor: typeof Data;
+// let mappers = Map() as Map<typeof Data, Mapper<Data>>;
+
+export function getMapperOf<D extends Data, M extends Mapper<D>>(target: D | DataConstructor<D>): M {
+    if (target instanceof Data) {
+        target = Object.getPrototypeOf(target).constructor as DataConstructor<D>;
+    }
+
+    const mapperConstructor = target.mapper;
+    const columns = target.columns;
+    const options = target.mapperOptions || {};
+    options[`service`] = target.mapperService;
+    options[`collection`] = target.mapperCollection;
+
+    return Reflect.construct(mapperConstructor, [target, columns, options]);
+}
+
+export abstract class Mapper<T extends Data> extends EventEmitter {
+    protected dataConstructor: DataConstructor<T>;
     protected columns: Columns;
     protected primaryKeys: Columns;
     protected options: MapperOptions;
 
-    constructor(dataConstructor: typeof Data, columns: Columns, options?: object | MapperOptions) {
+    constructor(dataConstructor: DataConstructor<T>, columns: Columns, options?: object | MapperOptions) {
         super();
 
         this.dataConstructor = dataConstructor;
@@ -119,7 +135,7 @@ export abstract class Mapper extends EventEmitter {
         return column;
     }
 
-    pack(record: object, data?: Data): Data {
+    pack(record: object, data?: T): T {
         const columns = this.columns;
         let values = Map() as Values;
 
@@ -130,14 +146,14 @@ export abstract class Mapper extends EventEmitter {
         });
 
         if (data === undefined) {
-            data = Reflect.construct(this.dataConstructor, []) as Data;
+            data = Reflect.construct(this.dataConstructor, []) as T;
         }
         data.__retrieve(values);
 
         return data;
     }
 
-    unpack(data: Data): Values {
+    unpack(data: T): Values {
         let record = Map() as Values;
 
         data.getValues().forEach((value, key) => {
@@ -162,7 +178,7 @@ export abstract class Mapper extends EventEmitter {
         return cmd;
     }
 
-    buildInsertCommand(data: Data): InsertCommand {
+    buildInsertCommand(data: T): InsertCommand {
         const id = data.getIDValues();
 
         const cmd: InsertCommand = {
@@ -175,7 +191,7 @@ export abstract class Mapper extends EventEmitter {
         return cmd;
     };
 
-    buildUpdateCommand(data: Data): UpdateCommand {
+    buildUpdateCommand(data: T): UpdateCommand {
         const id = data.getIDValues();
 
         const cmd: UpdateCommand = {
@@ -189,7 +205,7 @@ export abstract class Mapper extends EventEmitter {
         return cmd;
     }
 
-    buildDeleteCommand(data: Data): DeleteCommand {
+    buildDeleteCommand(data: T): DeleteCommand {
         const id = data.getIDValues();
 
         const cmd: DeleteCommand = {
@@ -202,7 +218,7 @@ export abstract class Mapper extends EventEmitter {
         return cmd;
     }
 
-    async find(id): Promise<Data | null> {
+    async find(id): Promise<T | null> {
         const cmd = this.buildFindCommand(this.normalizeID(id));
         const record = await this.doFind(cmd);
 
@@ -213,7 +229,17 @@ export abstract class Mapper extends EventEmitter {
         return this.pack(record);
     }
 
-    async refresh(data: Data): Promise<Data> {
+    async findOrFail(id): Promise<T> {
+        const data = await this.find(id);
+
+        if (data === null) {
+            throw new DataNotFoundError(`Data not found`);
+        }
+
+        return data;
+    }
+
+    async refresh(data: T): Promise<T> {
         if (data.isFresh()) {
             return data;
         }
@@ -228,7 +254,7 @@ export abstract class Mapper extends EventEmitter {
         return this.pack(record, data);
     }
 
-    async save(data: Data): Promise<Data> {
+    async save(data: T): Promise<T> {
         if (this.isReadonly()) {
             throw new Error();
         }
@@ -254,7 +280,7 @@ export abstract class Mapper extends EventEmitter {
         return data;
     }
 
-    async destroy(data: Data): Promise<boolean> {
+    async destroy(data: T): Promise<boolean> {
         if (this.isReadonly()) {
             throw new Error();
         }
@@ -301,7 +327,7 @@ export abstract class Mapper extends EventEmitter {
         return this;
     }
 
-    protected async insert(data: Data): Promise<Data> {
+    protected async insert(data: T): Promise<T> {
         await data.__beforeInsert();
 
         data.validate();
@@ -319,7 +345,7 @@ export abstract class Mapper extends EventEmitter {
         return data;
     }
 
-    protected async update(data: Data): Promise<Data> {
+    protected async update(data: T): Promise<T> {
         await data.__beforeUpdate();
 
         data.validate();

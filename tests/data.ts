@@ -4,7 +4,7 @@ import * as AnyORM from "../src/index";
 import "./fixture/columns";
 import { TestMapper } from "./fixture/mapper";
 
-class Mapper extends TestMapper(AnyORM.Mapper) {
+class Mapper extends TestMapper {
 
 }
 

@@ -4,69 +4,67 @@ import { Serial } from "./columns";
 
 export let testStorage = Map<any, AnyORM.Values>();
 
-export function TestMapper(MapperConstructor: typeof AnyORM.Mapper) {
-    return class extends MapperConstructor {
-        protected async doFind(cmd: AnyORM.FindCommand): Promise<object | null> {
-            const key = this.getIndexKey(cmd.id);
-            const record = testStorage.get(key);
+export class TestMapper extends AnyORM.Mapper<AnyORM.Data> {
+    protected async doFind(cmd: AnyORM.FindCommand): Promise<object | null> {
+        const key = this.getIndexKey(cmd.id);
+        const record = testStorage.get(key);
 
-            if (record === undefined) {
-                return null;
+        if (record === undefined) {
+            return null;
+        }
+
+        return record.toObject();
+    }
+
+    protected async doInsert(cmd: AnyORM.InsertCommand): Promise<object> {
+        let record = cmd.record;
+        let id = OrderedMap() as AnyORM.Values;
+
+        this.primaryKeys.forEach((column, key) => {
+            if (column instanceof Serial) {
+                record = record.set(key, column.getNext());
             }
 
-            return record.toObject();
+            id = id.set(key, record.get(key));
+        });
+
+        const key = this.getIndexKey(id);
+
+        testStorage = testStorage.set(key, record);
+
+        return id.toObject();
+    }
+
+    protected async doUpdate(cmd: AnyORM.UpdateCommand): Promise<object> {
+        const key = this.getIndexKey(cmd.id);
+        const values = testStorage.get(key);
+
+        if (values !== undefined) {
+            testStorage = testStorage.set(key, values.merge(cmd.record));
         }
 
-        protected async doInsert(cmd: AnyORM.InsertCommand): Promise<object> {
-            let record = cmd.record;
-            let id = OrderedMap() as AnyORM.Values;
+        return {};
+    }
 
-            this.primaryKeys.forEach((column, key) => {
-                if (column instanceof Serial) {
-                    record = record.set(key, column.getNext());
-                }
+    protected async doDelete(cmd: AnyORM.DeleteCommand): Promise<boolean> {
+        const key = this.getIndexKey(cmd.id);
 
-                id = id.set(key, record.get(key));
-            });
+        testStorage = testStorage.delete(key);
 
-            const key = this.getIndexKey(id);
+        return true;
+    }
 
-            testStorage = testStorage.set(key, record);
-
-            return id.toObject();
+    private getIndexKey(id: AnyORM.Values): string {
+        if (!(id instanceof OrderedMap)) {
+            id = id.toOrderedMap();
         }
 
-        protected async doUpdate(cmd: AnyORM.UpdateCommand): Promise<object> {
-            const key = this.getIndexKey(cmd.id);
-            const values = testStorage.get(key);
+        let result: String[] = [];
 
-            if (values !== undefined) {
-                testStorage = testStorage.set(key, values.merge(cmd.record));
-            }
+        id.forEach((value, key) => {
+            result.push(`${key}:${value}`);
+        });
 
-            return {};
-        }
-
-        protected async doDelete(cmd: AnyORM.DeleteCommand): Promise<boolean> {
-            const key = this.getIndexKey(cmd.id);
-
-            testStorage = testStorage.delete(key);
-
-            return true;
-        }
-
-        private getIndexKey(id: AnyORM.Values): string {
-            if (!(id instanceof OrderedMap)) {
-                id = id.toOrderedMap();
-            }
-
-            let result: String[] = [];
-
-            id.forEach((value, key) => {
-                result.push(`${key}:${value}`);
-            });
-
-            return result.join(`&`);
-        }
-    };
+        return result.join(`&`);
+    }
 }

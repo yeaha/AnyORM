@@ -4,7 +4,9 @@ import * as AnyORM from "../src/index";
 import "./fixture/columns";
 import { TestMapper } from "./fixture/mapper";
 
-class Mapper extends TestMapper(AnyORM.Mapper) {
+const getMapperOf = AnyORM.getMapperOf;
+
+class MyMapper extends TestMapper {
 
 }
 
@@ -22,7 +24,7 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
         foo: "FOO",
     };
 
-    let mapper = new Mapper(Data, columns, options);
+    let mapper = new MyMapper(Data, columns, options);
     test("Getter", (t) => {
         t.is(mapper.getService(), "test.service");
         t.is(mapper.getCollection(), "test.collection");
@@ -43,7 +45,7 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
 (() => {
     class FooData extends AnyORM.Data {
-        static mapper = Mapper;
+        static mapper = MyMapper;
         static mapperService = "foo.service";
         static mapperCollection = "foo.collection";
 
@@ -55,7 +57,7 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
     }
 
     class BarData extends AnyORM.Data {
-        static mapper = Mapper;
+        static mapper = MyMapper;
         static mapperService = "bar.service";
         static mapperCollection = "bar.collection";
 
@@ -69,8 +71,6 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
     test("Mapper of Data", (t) => {
         const fooMapper = AnyORM.getMapperOf(FooData);
         const barMapper = AnyORM.getMapperOf(BarData);
-
-        t.notDeepEqual(fooMapper, barMapper);
 
         t.is(fooMapper.getOption("service"), "foo.service");
         t.is(barMapper.getOption("service"), "bar.service");
@@ -88,7 +88,7 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
 
 (() => {
     class TestData extends AnyORM.Data {
-        static mapper = Mapper;
+        static mapper = MyMapper;
 
         @AnyORM.PrimaryColumn(`serial`)
         id: number;
@@ -115,14 +115,14 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
     });
 
     test.serial("Find data", async (t) => {
-        const data = await TestData.findOrFail(1);
+        const data = await getMapperOf(TestData).findOrFail(1);
 
         t.is(data.get("foo"), "FOO");
         t.is(data.get("bar"), "BAR");
     });
 
     test.serial("Update data", async (t) => {
-        const data = await TestData.findOrFail(1);
+        const data = await getMapperOf(TestData).findOrFail(1);
 
         data.set("foo", "foo");
 
@@ -132,10 +132,10 @@ class Mapper extends TestMapper(AnyORM.Mapper) {
     });
 
     test.serial("Delete data", async (t) => {
-        const data = await TestData.findOrFail(1);
+        const data = await getMapperOf(TestData).findOrFail(1);
 
         await data.destroy();
 
-        t.is(await TestData.find(1), null);
+        t.is(await getMapperOf(TestData).find(1), null);
     });
 })();

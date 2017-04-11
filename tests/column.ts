@@ -1,8 +1,17 @@
 import test from "ava";
-import * as AnyORM from "../src/index";
+import {
+    AnyColumn,
+    columnFactory,
+    ColumnInterface,
+    IntegerColumn,
+    NumericColumn,
+    TextColumn,
+    UnexpectColumnValueError,
+    UUIDColumn,
+} from "../src/index";
 
 test("normalize options", (t) => {
-    const column: AnyORM.ColumnInterface = AnyORM.columnFactory("any");
+    const column: ColumnInterface = columnFactory("any");
     const options = column.getOptions();
 
     t.is(options.nullable, false);
@@ -14,7 +23,7 @@ test("normalize options", (t) => {
 });
 
 test("normalize primary options", (t) => {
-    const column = AnyORM.columnFactory("any", { primary: true });
+    const column = columnFactory("any", { primary: true });
     const options = column.getOptions();
 
     t.is(options.primary, true);
@@ -23,17 +32,15 @@ test("normalize primary options", (t) => {
 });
 
 test("ColumnFactory", (t) => {
-    const columnFactory = AnyORM.columnFactory;
-
-    t.true(columnFactory("foobar") instanceof AnyORM.AnyColumn);
-    t.true(columnFactory("numeric") instanceof AnyORM.NumericColumn);
-    t.true(columnFactory("integer") instanceof AnyORM.IntegerColumn);
-    t.true(columnFactory("text") instanceof AnyORM.TextColumn);
+    t.true(columnFactory("foobar") instanceof AnyColumn);
+    t.true(columnFactory("numeric") instanceof NumericColumn);
+    t.true(columnFactory("integer") instanceof IntegerColumn);
+    t.true(columnFactory("text") instanceof TextColumn);
 });
 
 // Numeric type
 (() => {
-    const column = AnyORM.columnFactory("numeric");
+    const column = columnFactory("numeric");
 
     test("NumericColumn.normalize()", (t) => {
         t.is(column.normalize(1.23), 1.23);
@@ -56,30 +63,30 @@ test("ColumnFactory", (t) => {
     test("NumericColumn.normalize() unexpect value", (t) => {
         t.throws(() => {
             column.normalize(Infinity);
-        }, AnyORM.UnexpectColumnValueError);
+        }, UnexpectColumnValueError);
 
         t.throws(() => {
             column.normalize("a");
-        }, AnyORM.UnexpectColumnValueError);
+        }, UnexpectColumnValueError);
     });
 })();
 
 // UUID Type
 (() => {
     test("UUID auto generator", (t) => {
-        const column = AnyORM.columnFactory("uuid", { autoGenerate: true });
+        const column = columnFactory("uuid", { autoGenerate: true });
 
         t.regex(column.getDefaultValue(), /^[0-9a-f\-]{36}$/);
     });
 
     test("UUID upperCase option", (t) => {
-        const column = AnyORM.columnFactory("uuid", { upperCase: true }) as AnyORM.UUIDColumn;
+        const column = columnFactory("uuid", { upperCase: true }) as UUIDColumn;
 
         t.regex(column.generate(), /^[0-9A-Z\-]{36}$/);
     });
 
     test("UUID as primary key", (t) => {
-        const column = AnyORM.columnFactory("uuid", { primary: true });
+        const column = columnFactory("uuid", { primary: true });
 
         t.regex(column.getDefaultValue(), /^[0-9a-f\-]{36}$/);
     });

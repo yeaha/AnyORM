@@ -1,18 +1,18 @@
 import { is as isSame, Map, OrderedMap } from "immutable";
 import { columnFactory, ColumnInterface, ColumnOptions } from "./column";
 import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
-import { Columns, getMapperOf, Mapper, MapperOptions } from "./mapper";
+import { Columns, getMapperOf, Mapper, MapperConstructor, MapperOptions } from "./mapper";
 
 export type Values = Map<string, any>;
 
-export interface DataConstructor<T extends Data> {
-    mapper: typeof Mapper;
+export interface DataConstructor<D extends Data, M extends Mapper<D>> {
+    mapper: MapperConstructor<D, M>;
     mapperService: string;
     mapperCollection: string;
     mapperOptions?: object | MapperOptions;
     columns: Columns;
 
-    new (values?: object): T;
+    new (values?: object): D;
 }
 
 // Data property decorator
@@ -36,7 +36,7 @@ export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
 }
 
 export abstract class Data {
-    static mapper: typeof Mapper;
+    static mapper: MapperConstructor<Data, Mapper<Data>>;
 
     static mapperService: string = "";
 

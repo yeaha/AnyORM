@@ -1,29 +1,32 @@
 import test from "ava";
 import { Map } from "immutable";
-import * as AnyORM from "../src/index";
+import {
+    Column,
+    Data,
+    getMapperOf,
+    MapperConstructor,
+    PrimaryColumn,
+    Values,
+} from "../src/index";
 import "./fixture/columns";
 import { TestMapper } from "./fixture/mapper";
 
-class Mapper extends TestMapper {
-
-}
-
 (() => {
-    class Data extends AnyORM.Data {
-        static mapper = Mapper;
+    class MyData extends Data {
+        static mapper: MapperConstructor<MyData, TestMapper<MyData>> = TestMapper;
 
-        @AnyORM.PrimaryColumn("integer")
+        @PrimaryColumn("integer")
         id: number;
 
-        @AnyORM.Column("string")
+        @Column("string")
         foo: string;
 
-        @AnyORM.Column("string")
+        @Column("string")
         bar: string;
     }
 
     test("Construct", (t) => {
-        let data = new Data();
+        let data = new MyData();
 
         t.false(data.isDirty());
         t.true(data.isFresh());
@@ -33,11 +36,11 @@ class Mapper extends TestMapper {
         t.true(data.hasColumn("bar"));
         t.false(data.hasColumn("foobar"));
 
-        t.true(AnyORM.getMapperOf(data) instanceof Mapper);
+        t.true(getMapperOf(data) instanceof TestMapper);
     });
 
     test("Setter & Getter", (t) => {
-        let data = new Data();
+        let data = new MyData();
 
         t.is(data.foo, null);
 
@@ -53,7 +56,7 @@ class Mapper extends TestMapper {
     });
 
     test("Pick values", (t) => {
-        let data = new Data({
+        let data = new MyData({
             foo: "Foo",
         });
 
@@ -66,7 +69,7 @@ class Mapper extends TestMapper {
     });
 
     test("Get all values", (t) => {
-        let data = new Data();
+        let data = new MyData();
         data.bar = "bar";
 
         const values = data.getValues();
@@ -78,7 +81,7 @@ class Mapper extends TestMapper {
     });
 
     test("Merge values", (t) => {
-        let data = new Data();
+        let data = new MyData();
 
         data.merge({
             foo: "foo",
@@ -90,8 +93,8 @@ class Mapper extends TestMapper {
     });
 
     test("Retrieve values", (t) => {
-        let data = new Data();
-        let values = Map() as AnyORM.Values;
+        let data = new MyData();
+        let values = Map() as Values;
 
         values = values.set("foo", "Foo");
         data.__retrieve(values);
@@ -102,8 +105,8 @@ class Mapper extends TestMapper {
     });
 
     test("Replace value", (t) => {
-        let data = new Data();
-        let values = Map() as AnyORM.Values;
+        let data = new MyData();
+        let values = Map() as Values;
 
         values = values.set("foo", "foo");
         data.__retrieve(values);
@@ -117,20 +120,20 @@ class Mapper extends TestMapper {
 })();
 
 (() => {
-    class SinglePKData extends AnyORM.Data {
-        static mapper = Mapper;
+    class SinglePKData extends Data {
+        static mapper: MapperConstructor<SinglePKData, TestMapper<SinglePKData>> = TestMapper;
 
-        @AnyORM.PrimaryColumn("uuid")
+        @PrimaryColumn("uuid")
         id: string;
     }
 
-    class MultiplePKData extends AnyORM.Data {
-        static mapper = Mapper;
+    class MultiplePKData extends Data {
+        static mapper: MapperConstructor<MultiplePKData, TestMapper<MultiplePKData>> = TestMapper;
 
-        @AnyORM.PrimaryColumn("uuid")
+        @PrimaryColumn("uuid")
         foo_id: string;
 
-        @AnyORM.PrimaryColumn("uuid")
+        @PrimaryColumn("uuid")
         bar_id: string;
     }
 

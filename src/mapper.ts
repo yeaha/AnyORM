@@ -6,14 +6,6 @@ import { DataNotFoundError, UndefinedColumnError, UnexpectColumnValueError } fro
 
 export type Columns = Map<string, ColumnInterface>;
 
-export interface MapperOptions {
-    service: string;
-    collection: string;
-    readonly: boolean;
-    strict: boolean;
-    [key: string]: any;
-}
-
 export enum CRUDType { Find, Insert, Update, Delete };
 
 interface CRUDCommand {
@@ -39,15 +31,15 @@ export interface DeleteCommand extends CRUDCommand {
     id: Values;
 }
 
-let mappers = Map() as Map<typeof Data, Mapper<Data>>;
+let mappers = Map() as Map<DataConstructor<Data, Mapper<Data>>, Mapper<Data>>;
 
-export function getMapperOf<T extends Data>(target: T | DataConstructor<T>): Mapper<T> {
+export function getMapperOf<D extends Data, M extends Mapper<D>>(target: D | DataConstructor<D, M>): M {
     if (target instanceof Data) {
-        target = Object.getPrototypeOf(target).constructor as DataConstructor<T>;
+        target = Object.getPrototypeOf(target).constructor as DataConstructor<D, M>;
     }
 
     if (mappers.has(target)) {
-        return mappers.get(target) as Mapper<T>;
+        return mappers.get(target) as M;
     }
 
     const mapperConstructor = target.mapper;
@@ -60,16 +52,28 @@ export function getMapperOf<T extends Data>(target: T | DataConstructor<T>): Map
 
     mappers = mappers.set(target, mapper);
 
-    return mapper;
+    return mapper as M;
+}
+
+export interface MapperOptions {
+    service: string;
+    collection: string;
+    readonly: boolean;
+    strict: boolean;
+    [key: string]: any;
+}
+
+export interface MapperConstructor<D extends Data, M extends Mapper<D>> {
+    new (dataConstructor: DataConstructor<D, M>, columns: Columns, options?: object | MapperOptions): M;
 }
 
 export abstract class Mapper<T extends Data> extends EventEmitter {
-    protected dataConstructor: DataConstructor<T>;
+    protected dataConstructor: typeof Data;
     protected columns: Columns;
     protected primaryKeys: Columns;
     protected options: MapperOptions;
 
-    constructor(dataConstructor: DataConstructor<T>, columns: Columns, options?: object | MapperOptions) {
+    constructor(dataConstructor: typeof Data, columns: Columns, options?: object | MapperOptions) {
         super();
 
         this.dataConstructor = dataConstructor;

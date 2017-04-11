@@ -1,11 +1,19 @@
 import { Map, OrderedMap } from "immutable";
-import * as AnyORM from "../../src/index";
+import {
+    Data,
+    DeleteCommand,
+    FindCommand,
+    InsertCommand,
+    Mapper,
+    UpdateCommand,
+    Values,
+} from "../../src/index";
 import { Serial } from "./columns";
 
-export let testStorage = Map<any, AnyORM.Values>();
+export let testStorage = Map<any, Values>();
 
-export class TestMapper extends AnyORM.Mapper<AnyORM.Data> {
-    protected async doFind(cmd: AnyORM.FindCommand): Promise<object | null> {
+export class TestMapper<T extends Data> extends Mapper<T> {
+    protected async doFind(cmd: FindCommand): Promise<object | null> {
         const key = this.getIndexKey(cmd.id);
         const record = testStorage.get(key);
 
@@ -16,9 +24,9 @@ export class TestMapper extends AnyORM.Mapper<AnyORM.Data> {
         return record.toObject();
     }
 
-    protected async doInsert(cmd: AnyORM.InsertCommand): Promise<object> {
+    protected async doInsert(cmd: InsertCommand): Promise<object> {
         let record = cmd.record;
-        let id = OrderedMap() as AnyORM.Values;
+        let id = OrderedMap() as Values;
 
         this.primaryKeys.forEach((column, key) => {
             if (column instanceof Serial) {
@@ -35,7 +43,7 @@ export class TestMapper extends AnyORM.Mapper<AnyORM.Data> {
         return id.toObject();
     }
 
-    protected async doUpdate(cmd: AnyORM.UpdateCommand): Promise<object> {
+    protected async doUpdate(cmd: UpdateCommand): Promise<object> {
         const key = this.getIndexKey(cmd.id);
         const values = testStorage.get(key);
 
@@ -46,7 +54,7 @@ export class TestMapper extends AnyORM.Mapper<AnyORM.Data> {
         return {};
     }
 
-    protected async doDelete(cmd: AnyORM.DeleteCommand): Promise<boolean> {
+    protected async doDelete(cmd: DeleteCommand): Promise<boolean> {
         const key = this.getIndexKey(cmd.id);
 
         testStorage = testStorage.delete(key);
@@ -54,7 +62,7 @@ export class TestMapper extends AnyORM.Mapper<AnyORM.Data> {
         return true;
     }
 
-    private getIndexKey(id: AnyORM.Values): string {
+    private getIndexKey(id: Values): string {
         if (!(id instanceof OrderedMap)) {
             id = id.toOrderedMap();
         }

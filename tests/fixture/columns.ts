@@ -1,6 +1,6 @@
-import * as AnyORM from "../../src/index";
+import { columnRegister, IntegerColumn } from "../../src/index";
 
-export class Serial extends AnyORM.IntegerColumn {
+export class Serial extends IntegerColumn {
     private val = 1;
 
     getNext() {
@@ -8,4 +8,4 @@ export class Serial extends AnyORM.IntegerColumn {
     }
 }
 
-AnyORM.columnRegister("serial", Serial);
+columnRegister("serial", Serial);

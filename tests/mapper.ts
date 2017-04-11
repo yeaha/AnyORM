@@ -1,22 +1,24 @@
 import test from "ava";
 import { Map } from "immutable";
-import * as AnyORM from "../src/index";
+import {
+    Column,
+    columnFactory,
+    Columns,
+    Data,
+    getMapperOf,
+    MapperConstructor,
+    PrimaryColumn,
+} from "../src/index";
 import "./fixture/columns";
 import { TestMapper } from "./fixture/mapper";
 
-const getMapperOf = AnyORM.getMapperOf;
-
-class MyMapper extends TestMapper {
-
-}
-
 (() => {
-    class Data extends AnyORM.Data {
-
+    class MyData extends Data {
+        static mapper: MapperConstructor<MyData, TestMapper<MyData>> = TestMapper;
     }
 
-    let columns = Map() as AnyORM.Columns;
-    columns = columns.set("id", AnyORM.columnFactory("numeric", { primary: true }));
+    let columns = Map() as Columns;
+    columns = columns.set("id", columnFactory("numeric", { primary: true }));
 
     const options = {
         service: "test.service",
@@ -24,7 +26,7 @@ class MyMapper extends TestMapper {
         foo: "FOO",
     };
 
-    let mapper = new MyMapper(Data, columns, options);
+    let mapper = new TestMapper(MyData, columns, options);
     test("Getter", (t) => {
         t.is(mapper.getService(), "test.service");
         t.is(mapper.getCollection(), "test.collection");
@@ -44,33 +46,33 @@ class MyMapper extends TestMapper {
 })();
 
 (() => {
-    class FooData extends AnyORM.Data {
-        static mapper = MyMapper;
+    class FooData extends Data {
+        static mapper: MapperConstructor<FooData, TestMapper<FooData>> = TestMapper;
         static mapperService = "foo.service";
         static mapperCollection = "foo.collection";
 
-        @AnyORM.PrimaryColumn("uuid")
+        @PrimaryColumn("uuid")
         foo_id: string;
 
-        @AnyORM.Column("string")
+        @Column("string")
         foo: string;
     }
 
-    class BarData extends AnyORM.Data {
-        static mapper = MyMapper;
+    class BarData extends Data {
+        static mapper: MapperConstructor<BarData, TestMapper<BarData>> = TestMapper;
         static mapperService = "bar.service";
         static mapperCollection = "bar.collection";
 
-        @AnyORM.PrimaryColumn("uuid")
+        @PrimaryColumn("uuid")
         bar_id: string;
 
-        @AnyORM.Column("string")
+        @Column("string")
         bar: string;
     }
 
     test("Mapper of Data", (t) => {
-        const fooMapper = AnyORM.getMapperOf(FooData);
-        const barMapper = AnyORM.getMapperOf(BarData);
+        const fooMapper = getMapperOf(FooData);
+        const barMapper = getMapperOf(BarData);
 
         t.is(fooMapper.getOption("service"), "foo.service");
         t.is(barMapper.getOption("service"), "bar.service");
@@ -87,16 +89,16 @@ class MyMapper extends TestMapper {
 })();
 
 (() => {
-    class TestData extends AnyORM.Data {
-        static mapper = MyMapper;
+    class TestData extends Data {
+        static mapper: MapperConstructor<TestData, TestMapper<TestData>> = TestMapper;
 
-        @AnyORM.PrimaryColumn(`serial`)
+        @PrimaryColumn(`serial`)
         id: number;
 
-        @AnyORM.Column(`string`)
+        @Column(`string`)
         foo: string;
 
-        @AnyORM.Column(`string`)
+        @Column(`string`)
         bar: string;
     }
 

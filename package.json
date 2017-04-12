@@ -22,18 +22,29 @@
   "peerDependencies": {
     "typescript": "^2.2.1"
   },
+  "dependencies": {
+    "@types/any-db": "^2.1.30",
+    "any-db": "^2.2.0",
+    "immutable": "^4.0.0-rc.2",
+    "lodash": "^4.17.4",
+    "sql-bricks": "^2.0.2",
+    "sql-bricks-postgres": "^0.4.3",
+    "uuid": "^3.0.1"
+  },
+  "optionalDependencies": {
+    "any-db-mysql": "^2.1.2",
+    "any-db-pool": "^2.2.0",
+    "any-db-postgres": "^2.1.5",
+    "any-db-sqlite3": "^2.1.4",
+    "any-db-transaction": "^2.2.2"
+  },
   "devDependencies": {
     "@types/lodash": "^4.14.55",
     "@types/node": "^7.0.8",
-    "ava": "^0.18.2",
+    "ava": "^0.19.1",
     "gulp": "^3.9.1",
     "gulp-typescript": "^3.1.5",
     "gulp-watch": "^4.3.11"
-  },
-  "dependencies": {
-    "immutable": "^4.0.0-rc.2",
-    "lodash": "^4.17.4",
-    "uuid": "^3.0.1"
   },
   "ava": {
     "files": [

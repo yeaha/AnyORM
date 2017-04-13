@@ -11,6 +11,7 @@ import {
 } from "../src/index";
 import "./fixture/columns";
 import { TestMapper } from "./fixture/mapper";
+import "./index";
 
 (() => {
     class MyData extends Data {

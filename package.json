@@ -16,8 +16,10 @@
   ],
   "license": "MIT",
   "scripts": {
+    "compile": "tsc",
+    "compile:watch": "tsc -w",
     "test": "tsc && ava --verbose",
-    "test:watch": "tsc && ava --verbose --watch"
+    "test:watch": "tsc && ava --watch"
   },
   "peerDependencies": {
     "typescript": "^2.2.1"
@@ -42,13 +44,12 @@
     "@types/lodash": "^4.14.55",
     "@types/node": "^7.0.8",
     "ava": "^0.19.1",
-    "gulp": "^3.9.1",
-    "gulp-typescript": "^3.1.5",
-    "gulp-watch": "^4.3.11"
+    "source-map-support": "^0.4.14"
   },
   "ava": {
     "files": [
       "built/tests/**/*.js",
+      "!built/tests/index.js",
       "!built/tests/fixture/*.js"
     ],
     "concurrency": 3,

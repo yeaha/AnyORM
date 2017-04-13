@@ -9,6 +9,7 @@ import {
     UnexpectColumnValueError,
     UUIDColumn,
 } from "../src/index";
+import "./index";
 
 test("normalize options", (t) => {
     const column: ColumnInterface = columnFactory("any");

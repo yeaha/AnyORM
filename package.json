@@ -25,20 +25,11 @@
     "typescript": "^2.2.2"
   },
   "dependencies": {
-    "@types/any-db": "^2.1.30",
-    "any-db": "^2.2.0",
+    "@types/knex": "^0.0.44",
     "immutable": "^4.0.0-rc.2",
+    "knex": "^0.12.9",
     "lodash": "^4.17.4",
-    "sql-bricks": "^2.0.2",
-    "sql-bricks-postgres": "^0.4.3",
     "uuid": "^3.0.1"
-  },
-  "optionalDependencies": {
-    "any-db-mysql": "^2.1.2",
-    "any-db-pool": "^2.2.0",
-    "any-db-postgres": "^2.1.5",
-    "any-db-sqlite3": "^2.1.4",
-    "any-db-transaction": "^2.2.2"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.55",
@@ -54,5 +45,10 @@
     ],
     "concurrency": 3,
     "failFast": true
+  },
+  "optionalDependencies": {
+    "mysql2": "^1.2.0",
+    "pg": "^6.1.5",
+    "sqlite3": "^3.1.8"
   }
 }

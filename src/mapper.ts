@@ -1,5 +1,6 @@
 import * as EventEmitter from "events";
 import { Map } from "immutable";
+import { isEmpty } from "lodash";
 import { ColumnInterface } from "./column";
 import { Data, DataConstructor, Values } from "./data";
 import { DataNotFoundError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
@@ -180,6 +181,8 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
     }
 
     buildFindCommand(id: Values): FindCommand {
+        this.ensureIDValue(id);
+
         const cmd: FindCommand = {
             type: CRUDType.Find,
             service: this.getService(id),
@@ -205,6 +208,7 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
 
     buildUpdateCommand(data: T): UpdateCommand {
         const id = data.getIDValues();
+        this.ensureIDValue(id);
 
         const cmd: UpdateCommand = {
             type: CRUDType.Update,
@@ -219,6 +223,7 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
 
     buildDeleteCommand(data: T): DeleteCommand {
         const id = data.getIDValues();
+        this.ensureIDValue(id);
 
         const cmd: DeleteCommand = {
             type: CRUDType.Delete,
@@ -373,6 +378,16 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
         this.emit(`after:update`, data);
 
         return data;
+    }
+
+    protected ensureIDValue(id: Values): void {
+        const hasEmptyValue = id.some((value, key) => {
+            return isEmpty(value);
+        });
+
+        if (hasEmptyValue) {
+            throw new Error();
+        }
     }
 
     protected abstract async doFind(cmd: FindCommand): Promise<object | null>;

@@ -22,13 +22,16 @@
     "test:watch": "tsc && ava --watch"
   },
   "peerDependencies": {
+    "any-db": "^2.2.0",
     "typescript": "^2.2.2"
   },
   "dependencies": {
-    "@types/knex": "^0.0.44",
+    "@types/any-db": "^2.1.30",
+    "@types/any-db-transaction": "^2.2.30",
+    "any-db-transaction": "^2.2.2",
     "immutable": "^4.0.0-rc.2",
-    "knex": "^0.12.9",
     "lodash": "^4.17.4",
+    "sql-bricks": "^2.0.2",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
@@ -47,8 +50,7 @@
     "failFast": true
   },
   "optionalDependencies": {
-    "mysql2": "^1.2.0",
-    "pg": "^6.1.5",
-    "sqlite3": "^3.1.8"
+    "any-db-mysql": "^2.1.2",
+    "any-db-postgres": "^2.1.5"
   }
 }

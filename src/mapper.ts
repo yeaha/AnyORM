@@ -1,6 +1,6 @@
 import * as EventEmitter from "events";
 import { Map } from "immutable";
-import { isEmpty } from "lodash";
+import { isNil } from "lodash";
 import { ColumnInterface } from "./column";
 import { Data, DataConstructor, Values } from "./data";
 import { DataNotFoundError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
@@ -382,7 +382,7 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
 
     protected ensureIDValue(id: Values): void {
         const hasEmptyValue = id.some((value, key) => {
-            return isEmpty(value);
+            return isNil(value);
         });
 
         if (hasEmptyValue) {

@@ -3,9 +3,7 @@
 // Definitions by: Yangyi <https://github.com/yeaha>
 // TypeScript Version: 2.2
 
-/// <reference types="node" />
-
-type Expr = sql | Expression | object;
+type Expr = Sql | Expression | object;
 type joinCriteriaFunc = (leftTable: string, leftAlias: string, rightTable: string, rightAlias: string) => object;
 
 interface ToStringOptions {
@@ -15,19 +13,19 @@ interface ToStringOptions {
     [key: string]: any;
 }
 
-interface sql {
+interface Sql {
     toString(options?: ToStringOptions): string;
 }
 
-interface val {
-    private _val: any;
+interface Val {
+    _val: any;
 }
 
-interface Expression extends sql {
+interface Expression extends Sql {
     clone(): this;
 }
 
-declare function sql(str: string, ...values: any[]): sql;
+declare function sql(str: string, ...values: any[]): Sql;
 
 declare namespace sql {
     export interface Parameterized {
@@ -35,10 +33,8 @@ declare namespace sql {
         values: any[];
     }
 
-    export interface Statement {
-        clone(): this;
+    export interface Statement extends Expression {
         toParams(options?: ToStringOptions): Parameterized;
-        toString(options?: ToStringOptions): string;
     }
 
     export interface Select extends Statement {
@@ -155,7 +151,7 @@ declare namespace sql {
         where(whereExpr: Expr): this;
     }
 
-    export declare function val(value: any): val;
+    export declare function val(value: any): Val;
 
     export declare function select(...columns: string[]): Select;
     export declare function select(columns: string[]): Select;

@@ -32,6 +32,7 @@
     "immutable": "^4.0.0-rc.2",
     "lodash": "^4.17.4",
     "sql-bricks": "^2.0.2",
+    "sql-bricks-postgres": "^0.4.3",
     "uuid": "^3.0.1"
   },
   "devDependencies": {

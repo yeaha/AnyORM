@@ -151,70 +151,70 @@ declare namespace sql {
         where(whereExpr: Expr): this;
     }
 
-    export declare function val(value: any): Val;
+    export function val(value: any): Val;
 
-    export declare function select(...columns: string[]): Select;
-    export declare function select(columns: string[]): Select;
+    export function select(...columns: string[]): Select;
+    export function select(columns: string[]): Select;
 
-    export declare function insert(tableName?: string, values?: object): Insert;
-    export declare function insert(tableName?: string, ...columns: string[]): Insert;
-    export declare function insert(tableName?: string, columns?: string[]): Insert;
+    export function insert(tableName?: string, values?: object): Insert;
+    export function insert(tableName?: string, ...columns: string[]): Insert;
+    export function insert(tableName?: string, columns?: string[]): Insert;
     export { insert as insertInto };
 
-    export declare function update(tableName: string, values?: object): Update;
+    export function update(tableName: string, values?: object): Update;
 
-    declare function $delete(tableName?: string): Delete;
+    function $delete(tableName?: string): Delete;
     export { $delete as delete, $delete as deleteFrom };
 
-    declare function $in(column: string, ...list: any[]): Expression;
-    declare function $in(column: string, select: Select): Expression;
+    function $in(column: string, ...list: any[]): Expression;
+    function $in(column: string, select: Select): Expression;
     export { $in as in };
 
-    export declare function not(expr: Expr): Expression;
-    export declare function and(...exprs: Expr[]): Expression;
-    export declare function or(...expr: Expr[]): Expression;
-    export declare function like(column: string, value: any, escapeChar?: string): Expression;
-    export declare function between(column: string, value1: any, value2: any): Expression;
-    export declare function isNull(column: string): Expression;
-    export declare function isNotNull(column: string): Expression;
-    export declare function exists(subquery: Select): Expression;
+    export function not(expr: Expr): Expression;
+    export function and(...exprs: Expr[]): Expression;
+    export function or(...expr: Expr[]): Expression;
+    export function like(column: string, value: any, escapeChar?: string): Expression;
+    export function between(column: string, value1: any, value2: any): Expression;
+    export function isNull(column: string): Expression;
+    export function isNotNull(column: string): Expression;
+    export function exists(subquery: Select): Expression;
 
-    export declare function aliasExpansions(aliases: object): void;
+    export function aliasExpansions(aliases: object): void;
 
-    export declare function joinCriteria(func: joinCriteriaFunc): void;
-    export declare function joinCriteria(): joinCriteriaFunc | undefined;
+    export function joinCriteria(func: joinCriteriaFunc): void;
+    export function joinCriteria(): joinCriteriaFunc | undefined;
 
-    export declare function eq(column: string, value: any): Expression;
-    export declare function equal(column: string, value: any): Expression;
-    export declare function notEq(column: string, value: any): Expression;
-    export declare function lt(column: string, value: any): Expression;
-    export declare function lte(column: string, value: any): Expression;
-    export declare function gt(column: string, value: any): Expression;
-    export declare function gte(column: string, value: any): Expression;
+    export function eq(column: string, value: any): Expression;
+    export function equal(column: string, value: any): Expression;
+    export function notEq(column: string, value: any): Expression;
+    export function lt(column: string, value: any): Expression;
+    export function lte(column: string, value: any): Expression;
+    export function gt(column: string, value: any): Expression;
+    export function gte(column: string, value: any): Expression;
 
-    export declare function eqAll(column: string, select: Select): Expression;
-    export declare function equalAll(column: string, select: Select): Expression;
-    export declare function notEqAll(column: string, select: Select): Expression;
-    export declare function ltAll(column: string, select: Select): Expression;
-    export declare function lteAll(column: string, select: Select): Expression;
-    export declare function gtAll(column: string, select: Select): Expression;
-    export declare function gteAll(column: string, select: Select): Expression;
+    export function eqAll(column: string, select: Select): Expression;
+    export function equalAll(column: string, select: Select): Expression;
+    export function notEqAll(column: string, select: Select): Expression;
+    export function ltAll(column: string, select: Select): Expression;
+    export function lteAll(column: string, select: Select): Expression;
+    export function gtAll(column: string, select: Select): Expression;
+    export function gteAll(column: string, select: Select): Expression;
 
-    export declare function eqAny(column: string, select: Select): Expression;
-    export declare function equalAny(column: string, select: Select): Expression;
-    export declare function notEqAny(column: string, select: Select): Expression;
-    export declare function ltAny(column: string, select: Select): Expression;
-    export declare function lteAny(column: string, select: Select): Expression;
-    export declare function gtAny(column: string, select: Select): Expression;
-    export declare function gteAny(column: string, select: Select): Expression;
+    export function eqAny(column: string, select: Select): Expression;
+    export function equalAny(column: string, select: Select): Expression;
+    export function notEqAny(column: string, select: Select): Expression;
+    export function ltAny(column: string, select: Select): Expression;
+    export function lteAny(column: string, select: Select): Expression;
+    export function gtAny(column: string, select: Select): Expression;
+    export function gteAny(column: string, select: Select): Expression;
 
-    export declare function eqSome(column: string, select: Select): Expression;
-    export declare function equalSome(column: string, select: Select): Expression;
-    export declare function notEqSome(column: string, select: Select): Expression;
-    export declare function ltSome(column: string, select: Select): Expression;
-    export declare function lteSome(column: string, select: Select): Expression;
-    export declare function gtSome(column: string, select: Select): Expression;
-    export declare function gteSome(column: string, select: Select): Expression;
+    export function eqSome(column: string, select: Select): Expression;
+    export function equalSome(column: string, select: Select): Expression;
+    export function notEqSome(column: string, select: Select): Expression;
+    export function ltSome(column: string, select: Select): Expression;
+    export function lteSome(column: string, select: Select): Expression;
+    export function gtSome(column: string, select: Select): Expression;
+    export function gteSome(column: string, select: Select): Expression;
 }
 
 export = sql;

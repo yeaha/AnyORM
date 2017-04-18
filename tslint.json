@@ -11,6 +11,7 @@
         ],
         "member-access": false,
         "newline-before-return": true,
+        "no-bitwise": false,
         "no-empty": false,
         "no-string-literal": false,
         "no-string-throw": true,
@@ -22,6 +23,10 @@
                 "multiline": "always",
                 "singleline": "never"
             }
+        ],
+        "variable-name": [
+            true,
+            "ban-keywords"
         ]
     }
 }

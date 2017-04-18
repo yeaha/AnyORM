@@ -91,6 +91,8 @@ import "./index";
 
 (() => {
     class TestData extends Data {
+        static mapperService = "test";
+        static mapperCollection = "test.data";
         static mapper: MapperConstructor<TestData, TestMapper<TestData>> = TestMapper;
 
         @PrimaryColumn(`serial`)

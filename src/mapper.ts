@@ -10,13 +10,13 @@ export type Columns = Map<string, ColumnInterface>;
 export enum CRUDType { Find, Insert, Update, Delete };
 
 interface CRUDCommand {
+    id: Values;
     type: CRUDType;
     service: string;
     collection: string;
 }
 
 export interface FindCommand extends CRUDCommand {
-    id: Values;
 }
 
 export interface InsertCommand extends CRUDCommand {
@@ -24,12 +24,10 @@ export interface InsertCommand extends CRUDCommand {
 }
 
 export interface UpdateCommand extends CRUDCommand {
-    id: Values;
     record: Values;
 }
 
 export interface DeleteCommand extends CRUDCommand {
-    id: Values;
 }
 
 let mappers = Map() as Map<DataConstructor<Data, Mapper<Data>>, Mapper<Data>>;
@@ -117,6 +115,10 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
     getService(id?: Values): string {
         const service = this.options.service;
 
+        if (service === "") {
+            throw new Error(`Mapper service undefined`);
+        }
+
         return service;
     }
 
@@ -201,6 +203,7 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
             service: this.getService(id),
             collection: this.getCollection(id),
             record: this.unpack(data),
+            id: id,
         };
 
         return cmd;

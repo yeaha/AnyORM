@@ -35,6 +35,16 @@ export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
     return Column(type, options);
 }
 
+export function ProtectedColumn(type: string, options?: object | ColumnOptions) {
+    if (options === undefined) {
+        options = { primary: true };
+    } else {
+        options["protected"] = true;
+    }
+
+    return Column(type, options);
+}
+
 export abstract class Data {
     static mapper: MapperConstructor<Data, Mapper<Data>>;
 

@@ -26,10 +26,10 @@ export class DBMapper<T extends Data> extends Mapper<T> {
         const adapter = this.getDBAdapter(cmd.service);
         const table = cmd.collection;
         const columns = this.getColumns().keySeq().toArray();
-        const stmt = adapter.select(table).columns(columns).where(cmd.id.toObject);
+        const stmt = adapter.select(table).columns(columns).where(cmd.id.toObject());
 
-        const rows = await adapter.execute(stmt) as Array<object>;
-        const row = rows.shift();
+        const result = await adapter.execute(stmt);
+        const row = result[0][0];
 
         if (row === undefined) {
             return null;
@@ -41,7 +41,7 @@ export class DBMapper<T extends Data> extends Mapper<T> {
     protected async doInsert(cmd: InsertCommand): Promise<object> {
         const adapter = this.getDBAdapter(cmd.service);
         const table = cmd.collection;
-        const stmt = adapter.insert(table, cmd.record.toObject);
+        const stmt = adapter.insert(table, cmd.record.toObject());
 
         if (adapter instanceof PgsqlAdapter) {
             stmt.returning(cmd.id.keySeq().toArray());
@@ -55,7 +55,7 @@ export class DBMapper<T extends Data> extends Mapper<T> {
     protected async doUpdate(cmd: UpdateCommand): Promise<object> {
         const adapter = this.getDBAdapter(cmd.service);
         const table = cmd.collection;
-        const stmt = adapter.update(table, cmd.record.toObject).where(cmd.id.toObject);
+        const stmt = adapter.update(table, cmd.record.toObject()).where(cmd.id.toObject());
 
         await adapter.execute(stmt);
 

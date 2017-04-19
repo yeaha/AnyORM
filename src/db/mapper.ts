@@ -1,3 +1,4 @@
+import { isNil } from "lodash";
 import { Data } from "../data";
 import { DeleteCommand, FindCommand, InsertCommand, Mapper, UpdateCommand } from "../mapper";
 import { DBAdapter, PgsqlAdapter } from "./adapter";
@@ -44,12 +45,20 @@ export class DBMapper<T extends Data> extends Mapper<T> {
         const stmt = adapter.insert(table, cmd.record.toObject());
 
         if (adapter instanceof PgsqlAdapter) {
-            stmt.returning(cmd.id.keySeq().toArray());
+            const returning = cmd.id
+                .filter((value, key) => { return isNil(value); })
+                .keySeq()
+                .toArray();
+
+            if (returning.length) {
+                stmt.returning(returning);
+            }
         }
 
         await adapter.execute(stmt);
 
-        return {};
+        // TODO: 获取自增长主键的值
+        return cmd.id.toObject();
     }
 
     protected async doUpdate(cmd: UpdateCommand): Promise<object> {
@@ -62,13 +71,11 @@ export class DBMapper<T extends Data> extends Mapper<T> {
         return {};
     }
 
-    protected async doDelete(cmd: DeleteCommand): Promise<boolean> {
+    protected async doDelete(cmd: DeleteCommand): Promise<void> {
         const adapter = this.getDBAdapter(cmd.service);
         const table = cmd.collection;
         const stmt = adapter.delete(table).where(cmd.id.toObject());
 
         await adapter.execute(stmt);
-
-        return true;
     }
 }

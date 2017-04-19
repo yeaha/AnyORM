@@ -300,13 +300,13 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
         return data;
     }
 
-    async destroy(data: T): Promise<boolean> {
+    async destroy(data: T): Promise<void> {
         if (this.isReadonly()) {
             throw new Error();
         }
 
         if (data.isFresh()) {
-            return true;
+            return;
         }
 
         await data.__beforeDelete();
@@ -314,17 +314,11 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
         this.emit(`before:delete`, data);
 
         const cmd = this.buildDeleteCommand(data);
-        const result = await this.doDelete(cmd);
-
-        if (result === false) {
-            throw new Error();
-        }
+        await this.doDelete(cmd);
 
         await data.__afterDelete();
 
         this.emit(`after:delete`, data);
-
-        return result;
     }
 
     protected setColumns(columns: Columns): this {
@@ -396,7 +390,7 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
     protected abstract async doFind(cmd: FindCommand): Promise<object | null>;
     protected abstract async doInsert(cmd: InsertCommand): Promise<object>;
     protected abstract async doUpdate(cmd: UpdateCommand): Promise<object>;
-    protected abstract async doDelete(cmd: DeleteCommand): Promise<boolean>;
+    protected abstract async doDelete(cmd: DeleteCommand): Promise<void>;
 
     private normalizeID(id: string | number | object): Values {
         const columns = this.primaryKeys;

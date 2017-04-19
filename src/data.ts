@@ -231,8 +231,6 @@ export abstract class Data {
     }
 
     async save(): Promise<this> {
-        this.validate();
-
         await getMapperOf(this).save(this);
 
         return this;

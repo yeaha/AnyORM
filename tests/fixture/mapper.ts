@@ -54,12 +54,10 @@ export class TestMapper<T extends Data> extends Mapper<T> {
         return {};
     }
 
-    protected async doDelete(cmd: DeleteCommand): Promise<boolean> {
+    protected async doDelete(cmd: DeleteCommand): Promise<void> {
         const key = this.getIndexKey(cmd.id);
 
         testStorage = testStorage.delete(key);
-
-        return true;
     }
 
     private getIndexKey(id: Values): string {

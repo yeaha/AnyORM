@@ -1,5 +1,6 @@
 import { is as isSame, Map, OrderedMap } from "immutable";
-import { columnFactory, ColumnInterface, ColumnOptions } from "./column";
+import { ColumnInterface } from "./column";
+import { FormatterFunc } from "./decorators";
 import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
 import { Columns, getMapperOf, Mapper, MapperConstructor, MapperOptions } from "./mapper";
 
@@ -13,36 +14,6 @@ export interface DataConstructor<D extends Data, M extends Mapper<D>> {
     columns: Columns;
 
     new (values?: object): D;
-}
-
-// Data property decorator
-export function Column(type: string, options?: object | ColumnOptions) {
-    return (target: Data, propertyKey: string) => {
-        const column = columnFactory(type, options);
-        const constructor = target["constructor"];
-
-        constructor["columns"] = constructor["columns"].set(propertyKey, column);
-    };
-}
-
-export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
-    if (options === undefined) {
-        options = { primary: true };
-    } else {
-        options["primary"] = true;
-    }
-
-    return Column(type, options);
-}
-
-export function ProtectedColumn(type: string, options?: object | ColumnOptions) {
-    if (options === undefined) {
-        options = { primary: true };
-    } else {
-        options["protected"] = true;
-    }
-
-    return Column(type, options);
 }
 
 export abstract class Data {
@@ -296,7 +267,22 @@ export abstract class Data {
         };
     }
 
+    private getFormatter(key: string): FormatterFunc | undefined {
+        const formatters = Object.getPrototypeOf(this).constructor["formatters"];
+
+        if (formatters === undefined) {
+            return undefined;
+        }
+
+        return (formatters as Map<string, FormatterFunc>).get(key);
+    }
+
     private change(key: string, value, column: ColumnInterface): void {
+        const formatter = this.getFormatter(key);
+        if (formatter !== undefined) {
+            value = formatter.apply(this, [value, column]);
+        }
+
         value = column.normalize(value);
 
         if (!isSame(value, this.current.values.get(key))) {

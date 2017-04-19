@@ -27,7 +27,7 @@
   "dependencies": {
     "@types/any-db": "^2.1.30",
     "@types/any-db-transaction": "^2.2.30",
-    "@types/knex": "^0.0.45",
+    "@types/knex": "^0.0.46",
     "immutable": "^4.0.0-rc.2",
     "knex": "^0.12.9",
     "lodash": "^4.17.4",
@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.55",
-    "@types/node": "^7.0.8",
+    "@types/node": "^7.0.13",
     "ava": "^0.19.1",
     "source-map-support": "^0.4.14"
   },

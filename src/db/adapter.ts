@@ -89,20 +89,38 @@ export abstract class DBAdapter {
     }
 
     async execute(statement: string, ...values: any[]): Promise<any>;
-    async execute(statement: Knex.QueryBuilder): Promise<any>;
-    async execute(statement: Knex.QueryBuilder | string, ...values: any[]): Promise<any> {
-        let cmd: { text: string, values: any[] };
+    async execute(statement: string, values: any[], trx?: Knex.Transaction): Promise<any>;
+    async execute(statement: Knex.QueryBuilder, trx?: Knex.Transaction): Promise<any>;
+    async execute(
+        statement: Knex.QueryBuilder | string,
+        values?: any[] | Knex.Transaction,
+        trx?: Knex.Transaction,
+    ): Promise<any> {
+        let cmd: { text: string, values: any[] } = { text: "", values: [] };
 
         if (typeof statement === "string") {
-            cmd = { text: statement, values: values };
+            cmd.text = statement;
+
+            if (values instanceof Array) {
+                cmd.values = values;
+            }
         } else {
             const sql = statement.toSQL();
-            cmd = { text: sql.sql, values: sql.bindings };
+            cmd.text = sql.sql;
+            cmd.values = sql.bindings;
+        }
+
+        const conn = this.connect();
+
+        if (trx !== undefined) {
+            conn.transacting(trx);
+        } else if (values !== undefined && !(values instanceof Array)) {
+            conn.transacting(values);
         }
 
         return new Promise((resolve, reject) => {
-            this.connect().raw(cmd.text, cmd.values).asCallback((error, result) => {
-                error ? reject(error) : resolve(result);
+            conn.raw(cmd.text, cmd.values).asCallback((error, result) => {
+                error ? reject(error) : resolve(resolve);
             });
         });
     }

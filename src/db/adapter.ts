@@ -61,7 +61,8 @@ export abstract class DBAdapter {
         this.options = options;
     }
 
-    // abstract async getLastID(tableName: string, column: string): Promise<number | null>;
+    abstract async getLastInsertID(tableName?: string, column?: string, trx?: Knex.Transaction): Promise<number | null>;
+    abstract async getLastInsertID(trx?: Knex.Transaction): Promise<number | null>;
 
     connect() {
         if (!this.client) {
@@ -143,9 +144,25 @@ export abstract class DBAdapter {
 }
 
 export class MysqlAdapter extends DBAdapter {
+    async getLastInsertID(
+        tableName?: string | Knex.Transaction,
+    ): Promise<number | null> {
+        let trx: Knex.Transaction | undefined = undefined;
 
+        if (tableName !== undefined && typeof tableName !== "string") {
+            trx = tableName;
+        }
+
+        return await this.execute("select last_insert_id()", [], trx);
+    }
 }
 
 export class PgsqlAdapter extends DBAdapter {
-
+    async getLastInsertID(
+        tableName?: string | Knex.Transaction,
+        column?: string,
+        trx?: Knex.Transaction,
+    ): Promise<number | null> {
+        return null;
+    }
 }

@@ -41,9 +41,9 @@
   },
   "ava": {
     "files": [
-      "built/tests/**/*.js",
-      "!built/tests/index.js",
-      "!built/tests/fixture/*.js"
+      "build/tests/**/*.js",
+      "!build/tests/index.js",
+      "!build/tests/fixture/*.js"
     ],
     "concurrency": 3,
     "failFast": true

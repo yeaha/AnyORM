@@ -5,7 +5,7 @@
             "./src",
             "./tests"
         ],
-        "outDir": "./built",
+        "outDir": "./build",
         "target": "es2017",
         "experimentalDecorators": true,
         "module": "commonjs",

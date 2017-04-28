@@ -6,11 +6,11 @@ export class DataNotFoundError extends Error {
     }
 }
 
-export class UnexpectColumnValueError extends Error {
+export class UnexpectedColumnValueError extends Error {
     constructor(message: string) {
         super(message);
 
-        Object.setPrototypeOf(this, UnexpectColumnValueError.prototype);
+        Object.setPrototypeOf(this, UnexpectedColumnValueError.prototype);
     }
 }
 

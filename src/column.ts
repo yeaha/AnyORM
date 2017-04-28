@@ -1,6 +1,7 @@
 import * as _ from "lodash";
+import * as moment from "moment";
 import * as uuid from "uuid";
-import { UnexpectColumnValueError } from "./error";
+import { UnexpectedColumnValueError } from "./error";
 
 export interface ColumnOptions {
     primary: boolean;
@@ -66,7 +67,13 @@ export class AnyColumn implements ColumnInterface {
     }
 
     getDefaultValue() {
-        return this.options.default;
+        const value = this.options.default;
+
+        if (typeof value === "function") {
+            return Reflect.apply(value, this, []);
+        }
+
+        return value;
     }
 
     toJson(value) {
@@ -130,9 +137,9 @@ export class NumericColumn extends AnyColumn {
         value = _.toNumber(value);
 
         if (value === Infinity) {
-            throw new UnexpectColumnValueError("Infinity number");
+            throw new UnexpectedColumnValueError("Infinity number");
         } else if (_.isNaN(value)) {
-            throw new UnexpectColumnValueError("Not a number");
+            throw new UnexpectedColumnValueError("Not a number");
         }
 
         return value;
@@ -147,7 +154,7 @@ export class IntegerColumn extends NumericColumn {
     }
 }
 
-export class TextColumn extends AnyColumn {
+export class StringColumn extends AnyColumn {
     normalize(value) {
         value = _.toString(value);
 
@@ -167,13 +174,15 @@ export class TextColumn extends AnyColumn {
     }
 
     protected normalizeOptions(options): ColumnOptions {
+        const defaults = { trimSpace: true };
+
         options = super.normalizeOptions(options);
 
-        return { ...({ trimSpace: true }), ...options };
+        return { ...defaults, ...options };
     }
 }
 
-export class UUIDColumn extends TextColumn {
+export class UUIDColumn extends StringColumn {
     normalize(value) {
         value = this.options["upperCase"]
             ? _.toUpper(value)
@@ -195,14 +204,107 @@ export class UUIDColumn extends TextColumn {
     }
 
     protected normalizeOptions(options): ColumnOptions {
+        const defaults = { upperCase: false };
+
         options = super.normalizeOptions(options);
 
-        return { ...({ upperCase: false }), ...options };
+        return { ...defaults, ...options };
+    }
+}
+
+export class DateColumn extends StringColumn {
+    normalize(value) {
+        if (value instanceof Date) {
+            const year = value.getFullYear();
+            const month = value.getMonth() + 1;
+            const day = value.getDate();
+
+            value = year + "-" + month + "-" + day;
+        } else {
+            const regexp = this.options.regexp as RegExp;
+
+            if (typeof value !== "string" || !regexp.test(value)) {
+                throw new UnexpectedColumnValueError("Unexpected Date value");
+            }
+        }
+
+        return super.normalize(value);
+    }
+
+    protected normalizeOptions(options): ColumnOptions {
+        options = super.normalizeOptions(options);
+
+        // yyyy-mm-dd
+        options.regexp = /^\d{4}\-\d{1,2}\-\d{1,2}$/;
+
+        return options;
+    }
+}
+
+export class TimeColumn extends StringColumn {
+    normalize(value) {
+        if (value instanceof Date) {
+            const hour = value.getHours();
+            const minute = value.getMinutes();
+            const second = value.getSeconds();
+
+            value = hour + ":" + minute + ":" + second;
+        } else {
+            const regexp = this.options.regexp as RegExp;
+
+            if (typeof value !== "string" || !regexp.test(value)) {
+                throw new UnexpectedColumnValueError("Unexpected Time value");
+            }
+        }
+
+        return super.normalize(value);
+    }
+
+    protected normalizeOptions(options): ColumnOptions {
+        options = super.normalizeOptions(options);
+
+        // hh:mm:ss
+        options.regexp = /^\d{1,2}:\d{1,2}:\d{1,2}$/;
+
+        return options;
+    }
+}
+
+export class DateTimeColumn extends AnyColumn {
+    normalize(value): moment.Moment {
+        if (moment.isMoment(value)) {
+            return value;
+        } else if (moment.isDate(value)) {
+            return moment(value);
+        }
+
+        const time = moment(value);
+
+        if (!time.isValid()) {
+            throw new UnexpectedColumnValueError(`Invalid datetime value`);
+        }
+
+        return time;
+    }
+
+    store(value): string | null {
+        if (this.isNull(value)) {
+            return null;
+        }
+
+        if (!moment.isMoment(value) || !value.isValid()) {
+            throw new UnexpectedColumnValueError(`Invalid datetime value`);
+        }
+
+        return value.format("YYYY-MM-DDTHH:mm:ssZ");
     }
 }
 
 columnRegister("any", AnyColumn);
-columnRegister("numeric", NumericColumn);
+columnRegister("date", DateColumn);
+columnRegister("datetime", DateTimeColumn);
 columnRegister("integer", IntegerColumn);
-columnRegister("text", TextColumn);
+columnRegister("numeric", NumericColumn);
+columnRegister("string", StringColumn);
+columnRegister("time", TimeColumn);
 columnRegister("uuid", UUIDColumn);

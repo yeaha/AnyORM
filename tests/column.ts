@@ -1,12 +1,16 @@
 import test from "ava";
+import * as moment from "moment";
 import {
     AnyColumn,
     columnFactory,
     ColumnInterface,
+    DateColumn,
+    DateTimeColumn,
     IntegerColumn,
     NumericColumn,
-    TextColumn,
-    UnexpectColumnValueError,
+    StringColumn,
+    TimeColumn,
+    UnexpectedColumnValueError,
     UUIDColumn,
 } from "../src/index";
 import "./index";
@@ -36,8 +40,22 @@ test("ColumnFactory", (t) => {
     t.true(columnFactory("foobar") instanceof AnyColumn);
     t.true(columnFactory("numeric") instanceof NumericColumn);
     t.true(columnFactory("integer") instanceof IntegerColumn);
-    t.true(columnFactory("text") instanceof TextColumn);
+    t.true(columnFactory("string") instanceof StringColumn);
+    t.true(columnFactory("date") instanceof DateColumn);
+    t.true(columnFactory("time") instanceof TimeColumn);
+    t.true(columnFactory("datetime") instanceof DateTimeColumn);
 });
+
+(() => {
+    const column = columnFactory("string");
+
+    test("StringColumn options", (t) => {
+        const options = column.getOptions();
+
+        t.true(options["trimSpace"] !== undefined);
+        t.true(options["trimSpace"]);
+    });
+})();
 
 // Numeric type
 (() => {
@@ -64,11 +82,11 @@ test("ColumnFactory", (t) => {
     test("NumericColumn.normalize() unexpect value", (t) => {
         t.throws(() => {
             column.normalize(Infinity);
-        }, UnexpectColumnValueError);
+        }, UnexpectedColumnValueError);
 
         t.throws(() => {
             column.normalize("a");
-        }, UnexpectColumnValueError);
+        }, UnexpectedColumnValueError);
     });
 })();
 
@@ -90,5 +108,77 @@ test("ColumnFactory", (t) => {
         const column = columnFactory("uuid", { primary: true });
 
         t.regex(column.getDefaultValue(), /^[0-9a-f\-]{36}$/);
+    });
+})();
+
+// Date Type
+(() => {
+    const column = columnFactory("date");
+
+    test("DateColumn.options", (t) => {
+        const options = column.getOptions();
+
+        t.true(options.regexp instanceof RegExp);
+    });
+
+    test("DateColumn.normalize()", (t) => {
+        t.regex(column.normalize(new Date()), /^\d{4}\-\d{1,2}\-\d{1,2}$/);
+        t.regex(column.normalize("2017-04-27"), /^\d{4}\-\d{1,2}\-\d{1,2}$/);
+
+        t.throws(() => {
+            column.normalize(123);
+        }, UnexpectedColumnValueError);
+
+        t.throws(() => {
+            column.normalize("abc");
+        }, UnexpectedColumnValueError);
+    });
+})();
+
+// Time Type
+(() => {
+    const column = columnFactory("time");
+
+    test("DateColumn.options", (t) => {
+        const options = column.getOptions();
+
+        t.true(options.regexp instanceof RegExp);
+    });
+
+    test("DateColumn.normalize()", (t) => {
+        t.regex(column.normalize(new Date()), /^\d{1,2}:\d{1,2}:\d{1,2}$/);
+        t.regex(column.normalize("17:32:50"), /^\d{1,2}:\d{1,2}:\d{1,2}$/);
+
+        t.throws(() => {
+            column.normalize(123);
+        }, UnexpectedColumnValueError);
+
+        t.throws(() => {
+            column.normalize("abc");
+        }, UnexpectedColumnValueError);
+    });
+})();
+
+// DateTime type
+(() => {
+    const column = columnFactory("datetime");
+    const Moment = Object.getPrototypeOf(moment()).constructor;
+
+    test("DateTimeColumn.normalize()", (t) => {
+        const now = new Date();
+
+        t.true(column.normalize(now) instanceof Moment);
+
+        const time = "2017-04-28T13:06:00+08";
+
+        t.true(column.normalize(time) instanceof Moment);
+    });
+
+    test("DateTimeColumn.store()", (t) => {
+        const timeString = "2017-04-28T13:06:00+08:00";
+        const time = moment(timeString);
+
+        t.true(typeof column.store(time) === "string");
+        t.is(column.store(time), timeString);
     });
 })();

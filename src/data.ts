@@ -1,7 +1,7 @@
 import { is as isSame, Map, OrderedMap } from "immutable";
 import { ColumnInterface } from "./column";
 import { FormatterFunc } from "./decorators";
-import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
+import { RefuseUpdateColumnError, UndefinedColumnError, UnexpectedColumnValueError } from "./error";
 import { Columns, getMapperOf, Mapper, MapperConstructor, MapperOptions } from "./mapper";
 
 export type Values = Map<string, any>;
@@ -230,12 +230,12 @@ export abstract class Data {
                 }
 
                 if (!options.nullable) {
-                    throw new UnexpectColumnValueError(`${key} not nullable`);
+                    throw new UnexpectedColumnValueError(`${key} not nullable`);
                 }
             } else {
                 const re = options.regexp;
                 if (re instanceof RegExp && !re.test(value)) {
-                    throw new UnexpectColumnValueError(`${key} missmatch pattern ${re}`);
+                    throw new UnexpectedColumnValueError(`${key} missmatch pattern ${re}`);
                 }
             }
 

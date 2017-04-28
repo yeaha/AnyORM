@@ -3,7 +3,7 @@ import { Map } from "immutable";
 import { isNil } from "lodash";
 import { ColumnInterface } from "./column";
 import { Data, DataConstructor, Values } from "./data";
-import { DataNotFoundError, UndefinedColumnError, UnexpectColumnValueError } from "./error";
+import { DataNotFoundError, UndefinedColumnError, UnexpectedColumnValueError } from "./error";
 
 export type Columns = Map<string, ColumnInterface>;
 
@@ -405,7 +405,7 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
 
         columns.forEach((column, key) => {
             if (!id.hasOwnProperty(key)) {
-                throw new UnexpectColumnValueError(`Illegal id value`);
+                throw new UnexpectedColumnValueError(`Illegal id value`);
             }
 
             result = result.set(key, id[key]);

@@ -176,9 +176,13 @@ export abstract class Data {
     toJsonObject(): object {
         const obj = {};
 
-        this.getColumns().forEach((column, key) => {
-            obj[key] = column.toJson(this.get(key, column));
-        });
+        this.getColumns()
+            .filter((column) => {
+                return !column.isProtected();
+            })
+            .forEach((column, key) => {
+                obj[key] = column.toJson(this.get(key, column));
+            });
 
         return obj;
     }

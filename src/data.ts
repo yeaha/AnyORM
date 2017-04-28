@@ -72,7 +72,7 @@ export abstract class Data {
         return this;
     }
 
-    rollback(): this {
+    reset(): this {
         this.current.fresh = this.staged.fresh;
         this.current.values = this.staged.values;
 

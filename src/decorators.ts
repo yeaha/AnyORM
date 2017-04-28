@@ -2,9 +2,7 @@ import { Map } from "immutable";
 import { columnFactory, ColumnInterface, ColumnOptions } from "./column";
 import { Data } from "./data";
 
-export interface FormatterFunc {
-    (value, column: ColumnInterface);
-}
+export type FormatterFunc = (value, column: ColumnInterface) => any;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Data property decorator
@@ -31,9 +29,19 @@ export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
 
 export function ProtectedColumn(type: string, options?: object | ColumnOptions) {
     if (options === undefined) {
-        options = { primary: true };
+        options = { protected: true };
     } else {
         options["protected"] = true;
+    }
+
+    return Column(type, options);
+}
+
+export function StrictColumn(type: string, options?: object | ColumnOptions) {
+    if (options === undefined) {
+        options = { strict: true };
+    } else {
+        options["strict"] = true;
     }
 
     return Column(type, options);

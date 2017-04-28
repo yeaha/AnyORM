@@ -14,6 +14,18 @@ import * as uuid from "uuid";
 import { UnexpectedColumnValueError } from "./error";
 
 export interface ColumnOptions {
+    primary?: boolean;
+    autoGenerate?: boolean;
+    default?: any;
+    nullable?: boolean;
+    refuseUpdate?: boolean;
+    protected?: boolean;
+    strict?: boolean;
+    regexp?: RegExp | null;
+    [propName: string]: any;
+}
+
+export interface FixedColumnOptions extends ColumnOptions {
     primary: boolean;
     autoGenerate: boolean;
     default: any;
@@ -22,11 +34,10 @@ export interface ColumnOptions {
     protected: boolean;
     strict: boolean;
     regexp: RegExp | null;
-    [propName: string]: any;
 }
 
 export interface ColumnConstructor {
-    new (options?: object | ColumnOptions): ColumnInterface;
+    new (options?: ColumnOptions): ColumnInterface;
 }
 
 export interface ColumnInterface {
@@ -37,8 +48,13 @@ export interface ColumnInterface {
     toJson(value);
     clone(value);
     isNull(value): boolean;
-    getOptions(): ColumnOptions;
+    getOptions(): FixedColumnOptions;
     validate(value): void;
+    isNullable(): boolean;
+    isProtected(): boolean;
+    isStrict(): boolean;
+    isRefuseUpdate(): boolean;
+    isAutoGenerate(): boolean;
 }
 
 let constructors = new Map<string, ColumnConstructor>();
@@ -58,9 +74,9 @@ export function columnFactory(type: string, options?: object | ColumnOptions): C
 }
 
 export class AnyColumn implements ColumnInterface {
-    protected options: ColumnOptions;
+    protected options: FixedColumnOptions;
 
-    constructor(options?: object | ColumnOptions) {
+    constructor(options?: ColumnOptions) {
         this.options = this.normalizeOptions(options);
     }
 
@@ -86,6 +102,26 @@ export class AnyColumn implements ColumnInterface {
         return value;
     }
 
+    isAutoGenerate(): boolean {
+        return this.options.autoGenerate;
+    }
+
+    isProtected(): boolean {
+        return this.options.protected;
+    }
+
+    isStrict(): boolean {
+        return this.options.strict;
+    }
+
+    isRefuseUpdate(): boolean {
+        return this.options.refuseUpdate;
+    }
+
+    isNullable(): boolean {
+        return this.options.nullable;
+    }
+
     toJson(value) {
         return value;
     }
@@ -98,18 +134,16 @@ export class AnyColumn implements ColumnInterface {
         return value === "" || value === null || value === undefined;
     }
 
-    getOptions(): ColumnOptions {
+    getOptions(): FixedColumnOptions {
         return this.options;
     }
 
-    validate(value): void {
+    validate(value): void { }
 
-    }
+    protected normalizeOptions(options?: ColumnOptions): FixedColumnOptions {
+        let normalized: FixedColumnOptions;
 
-    protected normalizeOptions(options?: object | ColumnOptions): ColumnOptions {
-        let normalized: ColumnOptions;
-
-        const defaults: ColumnOptions = {
+        const defaults: FixedColumnOptions = {
             primary: false,
             autoGenerate: false,
             default: null,
@@ -123,7 +157,7 @@ export class AnyColumn implements ColumnInterface {
         if (options === undefined) {
             normalized = defaults;
         } else {
-            normalized = { ...defaults, ...options } as ColumnOptions;
+            normalized = { ...defaults, ...options };
         }
 
         if (normalized.primary) {
@@ -183,7 +217,7 @@ export class StringColumn extends AnyColumn {
         return this.isNull(value) ? "" : value;
     }
 
-    protected normalizeOptions(options): ColumnOptions {
+    protected normalizeOptions(options): FixedColumnOptions {
         const defaults = { trimSpace: true };
 
         options = super.normalizeOptions(options);
@@ -213,7 +247,7 @@ export class UUIDColumn extends StringColumn {
         return this.normalize(uuid.v4());
     }
 
-    protected normalizeOptions(options): ColumnOptions {
+    protected normalizeOptions(options): FixedColumnOptions {
         const defaults = { upperCase: false };
 
         options = super.normalizeOptions(options);
@@ -241,7 +275,7 @@ export class DateColumn extends StringColumn {
         return super.normalize(value);
     }
 
-    protected normalizeOptions(options): ColumnOptions {
+    protected normalizeOptions(options): FixedColumnOptions {
         options = super.normalizeOptions(options);
 
         // yyyy-mm-dd
@@ -270,7 +304,7 @@ export class TimeColumn extends StringColumn {
         return super.normalize(value);
     }
 
-    protected normalizeOptions(options): ColumnOptions {
+    protected normalizeOptions(options): FixedColumnOptions {
         options = super.normalizeOptions(options);
 
         // hh:mm:ss

@@ -8,7 +8,7 @@ export type FormatterFunc = (value, column: ColumnInterface) => any;
 // Data property decorator
 ////////////////////////////////////////////////////////////////////////////////
 
-export function Column(type: string, options?: object | ColumnOptions) {
+export function Column(type: string, options?: ColumnOptions) {
     return (target: Data, propertyKey: string) => {
         const column = columnFactory(type, options);
         const constructor = target["constructor"];
@@ -17,7 +17,7 @@ export function Column(type: string, options?: object | ColumnOptions) {
     };
 }
 
-export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
+export function PrimaryColumn(type: string, options?: ColumnOptions) {
     if (options === undefined) {
         options = { primary: true };
     } else {
@@ -27,7 +27,7 @@ export function PrimaryColumn(type: string, options?: object | ColumnOptions) {
     return Column(type, options);
 }
 
-export function ProtectedColumn(type: string, options?: object | ColumnOptions) {
+export function ProtectedColumn(type: string, options?: ColumnOptions) {
     if (options === undefined) {
         options = { protected: true };
     } else {
@@ -37,7 +37,7 @@ export function ProtectedColumn(type: string, options?: object | ColumnOptions) 
     return Column(type, options);
 }
 
-export function StrictColumn(type: string, options?: object | ColumnOptions) {
+export function StrictColumn(type: string, options?: ColumnOptions) {
     if (options === undefined) {
         options = { strict: true };
     } else {

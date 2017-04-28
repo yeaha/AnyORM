@@ -27,16 +27,18 @@
   "dependencies": {
     "@types/any-db": "^2.1.30",
     "@types/any-db-transaction": "^2.2.30",
-    "@types/knex": "^0.0.46",
+    "@types/knex": "^0.0.48",
     "immutable": "^4.0.0-rc.2",
     "knex": "^0.12.9",
     "lodash": "^4.17.4",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.55",
-    "@types/node": "^7.0.13",
+    "@types/faker": "^4.1.0",
+    "@types/lodash": "^4.14.63",
+    "@types/node": "^7.0.14",
     "ava": "^0.19.1",
+    "faker": "^4.1.0",
     "source-map-support": "^0.4.14"
   },
   "ava": {

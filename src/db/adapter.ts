@@ -6,6 +6,12 @@ export type DispatcherFunction = (...args: any[]) => string;
 let adapters = Map<string, DBAdapter | Knex.Config>();
 let dispatchers = Map<string, DispatcherFunction>();
 
+interface InserResult {
+    affectedRows: number;
+    returning?: object;
+    original: object;
+}
+
 export abstract class DBAdapter {
     static register(name: string, config: Knex.Config): typeof DBAdapter {
         const adapter = this.factory(config);
@@ -61,10 +67,9 @@ export abstract class DBAdapter {
         this.options = options;
     }
 
-    abstract async getLastInsertID(tableName?: string, column?: string, trx?: Knex.Transaction): Promise<number | null>;
-    abstract async getLastInsertID(trx?: Knex.Transaction): Promise<number | null>;
+    abstract async insert(table: string, values: object, returning?: string[], trx?: Knex.Transaction): Promise<InserResult>;
 
-    connect() {
+    connect(): Knex {
         if (!this.client) {
             this.client = Knex(this.options);
         }
@@ -121,17 +126,13 @@ export abstract class DBAdapter {
 
         return new Promise((resolve, reject) => {
             conn.raw(cmd.text, cmd.values).asCallback((error, result) => {
-                error ? reject(error) : resolve(resolve);
+                error ? reject(error) : resolve(result);
             });
         });
     }
 
     select(table: string) {
         return (this.connect())(table).select();
-    }
-
-    insert(table: string, values: object) {
-        return (this.connect())(table).insert(values);
     }
 
     update(table: string, values: object) {
@@ -144,25 +145,48 @@ export abstract class DBAdapter {
 }
 
 export class MysqlAdapter extends DBAdapter {
-    async getLastInsertID(
-        tableName?: string | Knex.Transaction,
-    ): Promise<number | null> {
-        let trx: Knex.Transaction | undefined = undefined;
-
-        if (tableName !== undefined && typeof tableName !== "string") {
-            trx = tableName;
+    async insert(table: string, values: object, returning?: string[], trx?: Knex.Transaction): Promise<InserResult> {
+        returning = returning || [];
+        if (returning.length > 1) {
+            throw new Error();
         }
 
-        return await this.execute("select last_insert_id()", [], trx);
+        const stmt = (this.connect())(table).insert(values);
+
+        const result = await this.execute(stmt, trx);
+
+        const insertResult = {
+            affectedRows: result.affectedRows,
+            original: result,
+        };
+
+        if (returning.length) {
+            const returningRow = {};
+            const key = returning[0];
+
+            returningRow[key] = result[0].insertId;
+
+            insertResult["returning"] = returningRow;
+        }
+
+        return insertResult;
     }
 }
 
 export class PgsqlAdapter extends DBAdapter {
-    async getLastInsertID(
-        tableName?: string | Knex.Transaction,
-        column?: string,
-        trx?: Knex.Transaction,
-    ): Promise<number | null> {
-        return null;
+    async insert(table: string, values: object, returning?: string[], trx?: Knex.Transaction): Promise<InserResult> {
+        const stmt = (this.connect())(table).insert(values);
+
+        if (returning !== undefined && returning.length) {
+            stmt.returning(returning);
+        }
+
+        const result = await this.execute(stmt, trx);
+
+        return {
+            affectedRows: result.rowCount,
+            returning: result.rows.length ? result.rows[0] : {},
+            original: result,
+        };
     }
 }

@@ -197,12 +197,17 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
 
     buildInsertCommand(data: T): InsertCommand {
         const id = data.getIDValues();
+        let record = this.unpack(data);
+
+        record = record.filterNot((value, key) => {
+            return id.has(key) && value === null;
+        });
 
         const cmd: InsertCommand = {
             type: CRUDType.Insert,
             service: this.getService(id),
             collection: this.getCollection(id),
-            record: this.unpack(data),
+            record: record,
             id: id,
         };
 

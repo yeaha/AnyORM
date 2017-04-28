@@ -1,7 +1,7 @@
-import { isNil } from "lodash";
+import { forEach, isNil } from "lodash";
 import { Data } from "../data";
 import { DeleteCommand, FindCommand, InsertCommand, Mapper, UpdateCommand } from "../mapper";
-import { DBAdapter, PgsqlAdapter } from "./adapter";
+import { DBAdapter } from "./adapter";
 
 export class DBMapper<T extends Data> extends Mapper<T> {
     select() {
@@ -40,25 +40,26 @@ export class DBMapper<T extends Data> extends Mapper<T> {
     }
 
     protected async doInsert(cmd: InsertCommand): Promise<object> {
-        const adapter = this.getDBAdapter(cmd.service);
-        const table = cmd.collection;
-        const stmt = adapter.insert(table, cmd.record.toObject());
+        let id = cmd.id;
+        const returning = id
+            .filter((value, key) => { return isNil(value); })
+            .keySeq()
+            .toArray();
 
-        if (adapter instanceof PgsqlAdapter) {
-            const returning = cmd.id
-                .filter((value, key) => { return isNil(value); })
-                .keySeq()
-                .toArray();
-
-            if (returning.length) {
-                stmt.returning(returning);
-            }
+        if (returning.length > 1) {
+            throw new Error();
         }
 
-        await adapter.execute(stmt);
+        const adapter = this.getDBAdapter(cmd.service);
+        const table = cmd.collection;
+        const result = await adapter.insert(table, cmd.record.toObject(), returning);
+
+        forEach(result.returning || {}, (value, key: string) => {
+            id = id.set(key, value);
+        });
 
         // TODO: 获取自增长主键的值
-        return cmd.id.toObject();
+        return id.toObject();
     }
 
     protected async doUpdate(cmd: UpdateCommand): Promise<object> {

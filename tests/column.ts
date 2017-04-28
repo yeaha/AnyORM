@@ -20,20 +20,29 @@ test("normalize options", (t) => {
     const options = column.getOptions();
 
     t.is(options.nullable, false);
+    t.false(column.isNullable());
+
     t.is(options.primary, false);
+    t.false(column.isPrimary());
+
     t.is(options.default, null);
+
     t.is(options.protected, false);
+    t.false(column.isProtected());
+
     t.is(options.strict, false);
+    t.false(column.isStrict());
+
     t.is(options.refuseUpdate, false);
+    t.false(column.isRefuseUpdate());
 });
 
 test("normalize primary options", (t) => {
     const column = columnFactory("any", { primary: true });
-    const options = column.getOptions();
 
-    t.is(options.primary, true);
-    t.is(options.strict, true);
-    t.is(options.refuseUpdate, true);
+    t.true(column.isPrimary());
+    t.true(column.isStrict());
+    t.true(column.isRefuseUpdate());
 });
 
 test("ColumnFactory", (t) => {
@@ -116,9 +125,7 @@ test("ColumnFactory", (t) => {
     const column = columnFactory("date");
 
     test("DateColumn.options", (t) => {
-        const options = column.getOptions();
-
-        t.true(options.regexp instanceof RegExp);
+        t.true(column.getOption("regexp") instanceof RegExp);
     });
 
     test("DateColumn.normalize()", (t) => {
@@ -140,9 +147,7 @@ test("ColumnFactory", (t) => {
     const column = columnFactory("time");
 
     test("DateColumn.options", (t) => {
-        const options = column.getOptions();
-
-        t.true(options.regexp instanceof RegExp);
+        t.true(column.getOption("regexp") instanceof RegExp);
     });
 
     test("DateColumn.normalize()", (t) => {

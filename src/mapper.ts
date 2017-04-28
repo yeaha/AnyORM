@@ -326,9 +326,7 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
         this.columns = columns;
 
         columns.forEach((column, key) => {
-            const options = column.getOptions();
-
-            if (options.primary) {
+            if (column.isPrimary()) {
                 primaryKeys = primaryKeys.set(key, column);
             }
         });

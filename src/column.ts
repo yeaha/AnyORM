@@ -48,8 +48,10 @@ export interface ColumnInterface {
     toJson(value);
     clone(value);
     isNull(value): boolean;
+    getOption(key: string): any;
     getOptions(): FixedColumnOptions;
     validate(value): void;
+    isPrimary(): boolean;
     isNullable(): boolean;
     isProtected(): boolean;
     isStrict(): boolean;
@@ -102,6 +104,10 @@ export class AnyColumn implements ColumnInterface {
         return value;
     }
 
+    isPrimary(): boolean {
+        return this.options.primary;
+    }
+
     isAutoGenerate(): boolean {
         return this.options.autoGenerate;
     }
@@ -132,6 +138,10 @@ export class AnyColumn implements ColumnInterface {
 
     isNull(value): boolean {
         return value === "" || value === null || value === undefined;
+    }
+
+    getOption(key: string) {
+        return this.options[key];
     }
 
     getOptions(): FixedColumnOptions {

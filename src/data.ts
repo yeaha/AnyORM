@@ -141,9 +141,7 @@ export abstract class Data {
             column = getMapperOf(this).getColumn(key);
         }
 
-        const options = column.getOptions();
-
-        if (options.refuseUpdate && !this.isFresh()) {
+        if (column.isRefuseUpdate() && !this.isFresh()) {
             throw new RefuseUpdateColumnError(`${key} refuse update`);
         }
 
@@ -185,10 +183,8 @@ export abstract class Data {
         return obj;
     }
 
-    toJson(...args: any[]): string {
-        args.unshift(this.toJsonObject());
-
-        return Reflect.apply(JSON.stringify, JSON, args);
+    toJson(): string {
+        return JSON.stringify(this.toJsonObject());
     }
 
     merge(values: object, strict: boolean = false): this {
@@ -201,13 +197,11 @@ export abstract class Data {
                 continue;
             }
 
-            const options = column.getOptions();
-
-            if (options.refuseUpdate && !this.isFresh()) {
+            if (column.isRefuseUpdate() && !this.isFresh()) {
                 continue;
             }
 
-            if (options.protected || options.strict) {
+            if (column.isProtected() || column.isStrict()) {
                 continue;
             }
 
@@ -237,19 +231,18 @@ export abstract class Data {
                 return;
             }
 
-            const options = column.getOptions();
             const value = this.get(key, column);
 
             if (column.isNull(value)) {
-                if (options.autoGenerate && isFresh) {
+                if (column.isAutoGenerate() && isFresh) {
                     return;
                 }
 
-                if (!options.nullable) {
+                if (!column.isNullable()) {
                     throw new UnexpectedColumnValueError(`${key} not nullable`);
                 }
             } else {
-                const re = options.regexp;
+                const re = column.getOption("regexp");
                 if (re instanceof RegExp && !re.test(value)) {
                     throw new UnexpectedColumnValueError(`${key} missmatch pattern ${re}`);
                 }

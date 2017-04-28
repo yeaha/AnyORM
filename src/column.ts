@@ -1,4 +1,14 @@
-import * as _ from "lodash";
+import {
+    cloneDeep,
+    isNaN,
+    isObject,
+    toInteger,
+    toLower,
+    toNumber,
+    toString,
+    toUpper,
+    trim,
+} from "lodash";
 import * as moment from "moment";
 import * as uuid from "uuid";
 import { UnexpectedColumnValueError } from "./error";
@@ -81,7 +91,7 @@ export class AnyColumn implements ColumnInterface {
     }
 
     clone(value) {
-        return _.isObject(value) ? _.cloneDeep(value) : value;
+        return isObject(value) ? cloneDeep(value) : value;
     }
 
     isNull(value): boolean {
@@ -134,11 +144,11 @@ export class AnyColumn implements ColumnInterface {
 
 export class NumericColumn extends AnyColumn {
     normalize(value): number {
-        value = _.toNumber(value);
+        value = toNumber(value);
 
         if (value === Infinity) {
             throw new UnexpectedColumnValueError("Infinity number");
-        } else if (_.isNaN(value)) {
+        } else if (isNaN(value)) {
             throw new UnexpectedColumnValueError("Not a number");
         }
 
@@ -150,23 +160,23 @@ export class IntegerColumn extends NumericColumn {
     normalize(value): number {
         value = super.normalize(value);
 
-        return _.toInteger(value);
+        return toInteger(value);
     }
 }
 
 export class StringColumn extends AnyColumn {
     normalize(value) {
-        value = _.toString(value);
+        value = toString(value);
 
         if (this.options["trimSpace"]) {
-            value = _.trim(value);
+            value = trim(value);
         }
 
         return value;
     }
 
     store(value) {
-        return this.isNull(value) ? null : _.toString(value);
+        return this.isNull(value) ? null : toString(value);
     }
 
     retrieve(value) {
@@ -185,8 +195,8 @@ export class StringColumn extends AnyColumn {
 export class UUIDColumn extends StringColumn {
     normalize(value) {
         value = this.options["upperCase"]
-            ? _.toUpper(value)
-            : _.toLower(value);
+            ? toUpper(value)
+            : toLower(value);
 
         return super.normalize(value);
     }

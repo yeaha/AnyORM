@@ -341,6 +341,10 @@ export class DateTimeColumn extends AnyColumn {
         return time;
     }
 
+    retrieve(value) {
+        return this.isNull(value) ? null : moment(value, this.getFormat());
+    }
+
     store(value): string | null {
         if (this.isNull(value)) {
             return null;
@@ -350,7 +354,7 @@ export class DateTimeColumn extends AnyColumn {
             throw new UnexpectedColumnValueError(`Invalid datetime value`);
         }
 
-        return value.format("YYYY-MM-DDTHH:mm:ssZ");
+        return value.format(this.getFormat());
     }
 
     toJson(value): string | null {
@@ -359,6 +363,10 @@ export class DateTimeColumn extends AnyColumn {
 
     clone(value) {
         return this.isNull(value) ? value : moment(value);
+    }
+
+    private getFormat(): string {
+        return this.getOption("format") || "YYYY-MM-DDTHH:mm:ssZ";
     }
 }
 

@@ -73,7 +73,7 @@ import "./index";
         let data = new MyData();
         data.bar = "bar";
 
-        const values = data.getValues();
+        const values = data.toMap();
 
         t.is(values.size, 3);
         t.is(values.get("id"), null);

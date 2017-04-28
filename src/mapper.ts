@@ -171,7 +171,7 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
     unpack(data: T): Values {
         let record = Map() as Values;
 
-        data.getValues().forEach((value, key) => {
+        data.toMap().forEach((value, key) => {
             if (value !== null) {
                 value = this.getColumn(key).store(value);
             }

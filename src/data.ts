@@ -165,7 +165,7 @@ export abstract class Data {
         return values;
     }
 
-    getValues(): Values {
+    toMap(): Values {
         let values = Map() as Values;
 
         this.getColumns().forEach((column, key) => {
@@ -173,6 +173,22 @@ export abstract class Data {
         });
 
         return values;
+    }
+
+    toJsonObject(): object {
+        const obj = {};
+
+        this.getColumns().forEach((column, key) => {
+            obj[key] = column.toJson(this.get(key, column));
+        });
+
+        return obj;
+    }
+
+    toJson(...args: any[]): string {
+        args.unshift(this.toJsonObject());
+
+        return Reflect.apply(JSON.stringify, JSON, args);
     }
 
     merge(values: object, strict: boolean = false): this {

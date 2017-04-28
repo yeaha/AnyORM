@@ -308,6 +308,14 @@ export class DateTimeColumn extends AnyColumn {
 
         return value.format("YYYY-MM-DDTHH:mm:ssZ");
     }
+
+    toJson(value): string | null {
+        return this.store(value);
+    }
+
+    clone(value) {
+        return this.isNull(value) ? value : moment(value);
+    }
 }
 
 columnRegister("any", AnyColumn);

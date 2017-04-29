@@ -1,7 +1,7 @@
 import { forEach, isNil } from "lodash";
 import { Data } from "../data";
 import { DeleteCommand, FindCommand, InsertCommand, Mapper, UpdateCommand } from "../mapper";
-import { DBAdapter } from "./adapter";
+import { DBManager } from "./adapter";
 
 export class DBMapper<T extends Data> extends Mapper<T> {
     select() {
@@ -15,12 +15,12 @@ export class DBMapper<T extends Data> extends Mapper<T> {
 
     // }
 
-    protected getDBAdapter(service?: string): DBAdapter {
+    protected getDBAdapter(service?: string) {
         if (service === undefined) {
             service = this.getService();
         }
 
-        return DBAdapter.get(service);
+        return DBManager.get(service);
     }
 
     protected async doFind(cmd: FindCommand): Promise<object | null> {
@@ -52,9 +52,15 @@ export class DBMapper<T extends Data> extends Mapper<T> {
 
         const adapter = this.getDBAdapter(cmd.service);
         const table = cmd.collection;
-        const result = await adapter.insert(table, cmd.record.toObject(), returning);
+        const stmt = adapter.insert(table, cmd.record.toObject());
 
-        forEach(result.returning || {}, (value, key: string) => {
+        if (returning.length) {
+            stmt.returning(returning);
+        }
+
+        const result = await adapter.executeInsert(stmt);
+
+        forEach(result.returning || [], (value, key: string) => {
             id = id.set(key, value);
         });
 
@@ -67,7 +73,7 @@ export class DBMapper<T extends Data> extends Mapper<T> {
         const table = cmd.collection;
         const stmt = adapter.update(table, cmd.record.toObject()).where(cmd.id.toObject());
 
-        await adapter.execute(stmt);
+        await adapter.executeUpdate(stmt);
 
         return {};
     }
@@ -77,6 +83,6 @@ export class DBMapper<T extends Data> extends Mapper<T> {
         const table = cmd.collection;
         const stmt = adapter.delete(table).where(cmd.id.toObject());
 
-        await adapter.execute(stmt);
+        await adapter.executeDelete(stmt);
     }
 }

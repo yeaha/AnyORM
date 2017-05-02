@@ -12,7 +12,7 @@ DBManager
         pool: {
             min: 0,
             max: 3,
-            idleTimeoutMillis: 500,
+            idleTimeoutMillis: 100,
         },
     })
     .register("pgsql", {
@@ -26,6 +26,6 @@ DBManager
         pool: {
             min: 0,
             max: 3,
-            idleTimeoutMillis: 500,
+            idleTimeoutMillis: 100,
         },
     });

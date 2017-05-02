@@ -26,7 +26,7 @@ export class User extends Data {
     @StrictColumn("string", { refuseUpdate: true })
     email: string;
 
-    @Formatter(function (this: User, value) {
+    @Formatter(function(this: User, value) {
         return this.encryptPassword(value);
     })
     @ProtectedColumn("string")
@@ -37,7 +37,7 @@ export class User extends Data {
 
     @Column("datetime", {
         refuseUpdate: true,
-        default: () => { return new Date(); },
+        default: () => new Date(),
         format: "YYYY-MM-DD HH:mm:ss",
     })
     create_time;

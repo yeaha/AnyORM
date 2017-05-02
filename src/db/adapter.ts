@@ -2,9 +2,16 @@ import { Map } from "immutable";
 import * as Knex from "knex";
 import { isArray, isNumber } from "lodash";
 
+export interface DBResponse {
+    original: any;
+    result: any[];
+    lastInsertId?: number;
+    affectedRows?: number;
+}
+
 interface SelectResult {
     original: any;
-    rows: Array<object>;
+    rows: object[];
 }
 
 interface InsertResult {
@@ -51,12 +58,10 @@ abstract class Wrapper {
         this.client = client;
     }
 
-    async execute(statement: Knex.QueryBuilder) {
-        return new Promise((resolve, reject) => {
-            statement.asCallback((error, result) => {
-                error ? reject(error) : resolve(result);
-            });
-        });
+    async execute(statement: string, ...values: any[]): Promise<any>;
+    async execute(statement: string, values: any[]): Promise<any>;
+    async execute(statement: string, values: any[]): Promise<any> {
+        return await this.client.raw(statement, values);
     }
 
     select(table: string) {
@@ -103,19 +108,19 @@ class Transaction extends Wrapper {
 function Client<T extends Constructor<Dialects>>(Base: T) {
     return class extends Base implements Client {
         async executeSelect(statement: Knex.QueryBuilder): Promise<SelectResult> {
-            const result = await this.execute(statement);
+            const result = await statement;
 
             return this.processSelectResult(result);
         }
 
         async executeUpdate(statement: Knex.QueryBuilder): Promise<UpdateResult> {
-            const result = await this.execute(statement);
+            const result = await statement;
 
             return this.processUpdateResult(result);
         }
 
         async executeDelete(statement: Knex.QueryBuilder): Promise<DeleteResult> {
-            const result = await this.execute(statement);
+            const result = await statement;
 
             return this.processDeleteResult(result);
         }
@@ -141,14 +146,14 @@ function MysqlDialects<T extends Constructor<Wrapper>>(Base: T) {
                 throw new Error();
             }
 
-            const result = await this.execute(statement);
+            const result = await statement;
 
             return this.processInsertResult(result);
         }
 
         processSelectResult(result): SelectResult {
             return {
-                rows: result as Array<object>,
+                rows: result as object[],
                 original: result,
             };
         }
@@ -209,14 +214,14 @@ function PgsqlDialects<T extends Constructor<Wrapper>>(Base: T) {
                 statement.returning(returningId);
             }
 
-            const result = await this.execute(statement);
+            const result = await statement;
 
             return this.processInsertResult(result);
         }
 
         processSelectResult(result): SelectResult {
             return {
-                rows: result as Array<object>,
+                rows: result as object[],
                 original: result,
             };
         }
@@ -290,13 +295,13 @@ class Manager {
         clients = clients.set(name, this.factory(config));
 
         return this;
-    };
+    }
 
     registerDispatcher(name: string, dispatcher: DispatcherFunction): this {
         dispatchers = dispatchers.set(name, dispatcher);
 
         return this;
-    };
+    }
 
     get(name: string, ...args: any[]): Client {
         const dispatcher = dispatchers.get(name);
@@ -310,7 +315,7 @@ class Manager {
         }
 
         return client;
-    };
+    }
 }
 
 export const DBManager = new Manager();

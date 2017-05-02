@@ -78,7 +78,7 @@ export abstract class Mapper<T extends Data> extends EventEmitter {
         this.dataConstructor = dataConstructor;
         this.setColumns(columns);
 
-        let defaults = {
+        const defaults = {
             service: "",
             collection: "",
             readonly: false,

@@ -29,7 +29,7 @@ export class DBMapper<T extends Data> extends Mapper<T> {
         const columns = this.getColumns().keySeq().toArray();
         const stmt = adapter.select(table).columns(columns).where(cmd.id.toObject());
 
-        const result = await adapter.execute(stmt);
+        const result = await stmt;
         const row = result[0][0];
 
         if (row === undefined) {
@@ -42,23 +42,15 @@ export class DBMapper<T extends Data> extends Mapper<T> {
     protected async doInsert(cmd: InsertCommand): Promise<object> {
         let id = cmd.id;
         const returning = id
-            .filter((value, key) => { return isNil(value); })
+            .filter((value, key) => isNil(value))
             .keySeq()
             .toArray();
-
-        if (returning.length > 1) {
-            throw new Error();
-        }
 
         const adapter = this.getDBAdapter(cmd.service);
         const table = cmd.collection;
         const stmt = adapter.insert(table, cmd.record.toObject());
 
-        if (returning.length) {
-            stmt.returning(returning);
-        }
-
-        const result = await adapter.executeInsert(stmt);
+        const result = await adapter.executeInsert(stmt, returning);
 
         forEach(result.returning || [], (value, key: string) => {
             id = id.set(key, value);

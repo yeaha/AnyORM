@@ -318,4 +318,5 @@ class Manager {
     }
 }
 
+export type DBClient = Client;
 export const DBManager = new Manager();

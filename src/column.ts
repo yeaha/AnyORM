@@ -59,7 +59,7 @@ export interface ColumnInterface {
     isAutoGenerate(): boolean;
 }
 
-let constructors = new Map<string, ColumnConstructor>();
+const constructors = new Map<string, ColumnConstructor>();
 
 export function columnRegister(type: string, constructor: ColumnConstructor) {
     constructors.set(type, constructor);
